@@ -1,5 +1,4 @@
 name: Continuous Integration (CI)
-
 on:
   pull_request:
     paths:

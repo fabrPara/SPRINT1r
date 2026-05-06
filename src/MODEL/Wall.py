@@ -9,7 +9,7 @@ class Wall:
 
     """
 
-    def __init__(self, start_cell: 'Cell', orientation: str):
+    def __init__(self, start_cell: "Cell", orientation: str):
         """Inizializza un nuovo muro.
 
         Args:

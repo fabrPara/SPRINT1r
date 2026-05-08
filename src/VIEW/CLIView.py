@@ -25,75 +25,93 @@ class CLIView(BaseView):
 
         """
         self._console.clear()
-
-        players_data = game_state.get("players", {})
+        
+       
+        self._draw_stats(game_state) 
+        
         board_data = game_state.get("board", {})
+        player_data = game_state.get("players",[])
+        self._draw_board(board_data, player_data)
 
-        self._draw_stats(players_data)
-        self._draw_board(board_data)
-
-    def _draw_stats(self, players_data: dict) -> None:
-        """Stampa le statistiche della partita in alto.
-
-        Args:
-            players_data (dict): Dati relativi ai giocatori.
-
-        """
+    def _draw_stats(self, players_data: dict): 
+         
         self._console.print("\n[bold cyan]--- QUORIDOR - SPRINT 1 ---[/bold cyan]")
 
-        turno = players_data.get("current_turn", "Sconosciuto")
-        muri_p1 = players_data.get("p1_walls", 10)
-        muri_p2 = players_data.get("p2_walls", 10)
+        
+        turno=players_data.get("current_player_id",[]) 
+        muri_p1 = players_data.get("players",[] )[0]._walls_count
+        muri_p2 = players_data.get("players",[] )[1]._walls_count
 
-        self._console.print(f"Turno di: [bold yellow]{turno}[/bold yellow]")
+        self._console.print(f"Turno di: [bold yellow]P{turno}[/bold yellow]")
+        self._console.print(f"Muri P1: {muri_p1} | Muri P2: {muri_p2}")
 
-        # Spezzata la stringa per rispettare il limite di 88 caratteri di Ruff
-        self._console.print(
-            f"Giocatore 1 (P1): {muri_p1} muri | Giocatore 2 (P2): {muri_p2} muri\n"
+    def _draw_board(self, board_data: dict, player_data: list) -> None:
+        """Disegna la board con player ."""
+        table = Table(
+            show_header=False, show_edge=False, 
+            pad_edge=False, box=None, padding=0
         )
+        for i in range(19):
+            # 1=varchi/muri V, 7=celle/muri H
+            w = 7 if i > 0 and i % 2 != 0 else (1 if i > 0 else None)
+            table.add_column(justify="center", width=w)
 
-    def _draw_board(self, board_data: dict) -> None:
-        """Disegna la scacchiera 9x9 rispettando la Definition of Done.
+        p1_pos = player_data[0]._position.get_coords()
+        p2_pos = player_data[1]._position.get_coords()
+        muri = board_data.get_walls()
 
-        Args:
-            board_data (dict): Dati con le posizioni di pedoni e muri.
+        m_v, m_h = "[bold red]┃[/bold red]", "[bold red]━━━━━━━[/bold red]"
+        m_c_v, m_c_h = "[bold red]┃[/bold red]", "[bold red]━[/bold red]"
 
-        """
-        table = Table(show_header=True, header_style="bold green", box=None)
+        def get_w_info(w):
+            p = w._start_cell
+            c = p.get_coords() if hasattr(p, "get_coords") else p
+            return c, w._orientation
 
-        table.add_column(" ")
+        # 1. COORDINATE LETTERE (Allineamento corretto: 4 spazi + lettera + 2 spazi)
+        c_let = [" "]
+        for char in "abcdefghi":
+            c_let.append(f"[bold green]{char}[/bold green]")
+            if char != "i":
+                c_let.append(" ")
+        table.add_row(*c_let)
 
-        for lettera in "abcdefghi":
-            table.add_column(lettera, justify="center")
+        m_list = [get_w_info(w) for w in muri]
 
-        # Estraiamo le posizioni correnti dai dati della board.
-        # Supponiamo siano salvate come tuple (x, y).
-        # (5, 1) è la partenza standard di P1 in Quoridor (e1)
-        # (5, 9) è la partenza standard di P2 in Quoridor (e9)
-        p1_pos = board_data.get("p1_pos", (5, 1))
-        p2_pos = board_data.get("p2_pos", (5, 9))
-
+        # 2. CICLO RIGHE
         for riga in range(1, 10):
-            elementi_riga = [f"[bold green]{riga}[/bold green]"]
+            if riga > 1:
+                el_h = [" "]
+                for c_h in range(1, 10):
+                    is_h = any(o == "H" and c in [(c_h, riga), (c_h - 1, riga)] 
+                               for c, o in m_list)
+                    el_h.append(m_h if is_h else "       ")
+                    if c_h < 9:
+                        v_h = any(o == "V" and c in [(c_h + 1, riga), 
+                                  (c_h + 1, riga + 1)] for c, o in m_list)
+                        h_h = any(o == "H" and c == (c_h, riga) 
+                                  for c, o in m_list)
+                        el_h.append(m_c_v if v_h else (m_c_h if h_h else " "))
+                table.add_row(*el_h)
 
-            for col in range(9):
-                x = col + 1  # La colonna 'a' è 1, 'b' è 2, ecc.
-                y = riga  # La riga va da 1 a 9
+            el_riga = [f"[bold green]{riga}[/bold green]"]
+            for col in range(1, 10):
+                # Rimosse le quadre dai player per evitare che la cella si allarghi
+                if (col, riga) == p1_pos:
+                    cella = "[bold magenta][P1] [/bold magenta]"
+                elif (col, riga) == p2_pos:
+                    cella = "[bold cyan][P2]  [/bold cyan]"
+                else:
+                    cella = "[grey37][  ][/grey37]"
+                el_riga.append(cella)
 
-                cella = "[grey37].[/grey37]"
-
-                # Inserisce dinamicamente P1 o P2 se la coordinata coincide
-                if (x, y) == p1_pos:
-                    cella = "[bold magenta]P1[/bold magenta]"
-                elif (x, y) == p2_pos:
-                    cella = "[bold cyan]P2[/bold cyan]"
-
-                elementi_riga.append(cella)
-
-            table.add_row(*elementi_riga)
+                if col < 9:
+                    is_v = any(o == "V" and c in [(col + 1, riga + 1), 
+                               (col + 1, riga + 2)] for c, o in m_list)
+                    el_riga.append(m_v if is_v else " ")
+            table.add_row(*el_riga)
 
         self._console.print(table)
-        self._console.print()
 
     def get_input(self) -> str:
         """Richiede un comando testuale all'utente.

@@ -1,5 +1,8 @@
 """Modulo per la gestione del tabellone di gioco."""
 
+from .Cell import Cell
+from .Wall import Wall
+
 
 class Board:
     """Rappresenta il tabellone di gioco.
@@ -27,3 +30,6 @@ class Board:
         """
         self._cells: list[Cell] = []  # noqa: F821
         self._walls: list[Wall] = []  # noqa: F821
+    def get_walls(self):
+        """Ritorna la lista dei muri attualmente posizionati sulla board."""
+        return self._walls

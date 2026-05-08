@@ -1,4 +1,5 @@
 from .Cell import Cell
+from .Exception import WallDepletionError
 
 
 class Player:
@@ -21,3 +22,14 @@ class Player:
         self._position = start_pos
         self._walls_count = 10  # Numero standard di muri in Quoridor
         self._target_row = target_row
+    
+    """ ritorna il numero di muri rimanenti del giocatore. """
+    
+    def get_walls_count(self) -> int:
+        return self._walls_count
+
+    def use_wall(self) -> None:
+        """Scala un muro dalla riserva del giocatore."""
+        if self._walls_count <= 0:
+            raise WallDepletionError("Non hai più muri a disposizione!")
+        self._walls_count -= 1

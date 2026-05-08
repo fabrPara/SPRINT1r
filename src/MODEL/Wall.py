@@ -19,3 +19,5 @@ class Wall:
         """
         self._start_cell = start_cell
         self._orientation = orientation
+
+    

@@ -25,22 +25,19 @@ class CLIView(BaseView):
 
         """
         self._console.clear()
-        
-       
-        self._draw_stats(game_state) 
-        
+
+        self._draw_stats(game_state)
+
         board_data = game_state.get("board", {})
-        player_data = game_state.get("players",[])
+        player_data = game_state.get("players", [])
         self._draw_board(board_data, player_data)
 
-    def _draw_stats(self, players_data: dict): 
-         
+    def _draw_stats(self, players_data: dict):
         self._console.print("\n[bold cyan]--- QUORIDOR - SPRINT 1 ---[/bold cyan]")
 
-        
-        turno=players_data.get("current_player_id",[]) 
-        muri_p1 = players_data.get("players",[] )[0]._walls_count
-        muri_p2 = players_data.get("players",[] )[1]._walls_count
+        turno = players_data.get("current_player_id", [])
+        muri_p1 = players_data.get("players", [])[0]._walls_count
+        muri_p2 = players_data.get("players", [])[1]._walls_count
 
         self._console.print(f"Turno di: [bold yellow]P{turno}[/bold yellow]")
         self._console.print(f"Muri P1: {muri_p1} | Muri P2: {muri_p2}")
@@ -48,8 +45,7 @@ class CLIView(BaseView):
     def _draw_board(self, board_data: dict, player_data: list) -> None:
         """Disegna la board con player ."""
         table = Table(
-            show_header=False, show_edge=False, 
-            pad_edge=False, box=None, padding=0
+            show_header=False, show_edge=False, pad_edge=False, box=None, padding=0
         )
         for i in range(19):
             # 1=varchi/muri V, 7=celle/muri H
@@ -83,14 +79,17 @@ class CLIView(BaseView):
             if riga > 1:
                 el_h = [" "]
                 for c_h in range(1, 10):
-                    is_h = any(o == "H" and c in [(c_h, riga), (c_h - 1, riga)] 
-                               for c, o in m_list)
+                    is_h = any(
+                        o == "H" and c in [(c_h, riga), (c_h - 1, riga)]
+                        for c, o in m_list
+                    )
                     el_h.append(m_h if is_h else "       ")
                     if c_h < 9:
-                        v_h = any(o == "V" and c in [(c_h + 1, riga), 
-                                  (c_h + 1, riga + 1)] for c, o in m_list)
-                        h_h = any(o == "H" and c == (c_h, riga) 
-                                  for c, o in m_list)
+                        v_h = any(
+                            o == "V" and c in [(c_h + 1, riga), (c_h + 1, riga + 1)]
+                            for c, o in m_list
+                        )
+                        h_h = any(o == "H" and c == (c_h, riga) for c, o in m_list)
                         el_h.append(m_c_v if v_h else (m_c_h if h_h else " "))
                 table.add_row(*el_h)
 
@@ -106,8 +105,10 @@ class CLIView(BaseView):
                 el_riga.append(cella)
 
                 if col < 9:
-                    is_v = any(o == "V" and c in [(col + 1, riga + 1), 
-                               (col + 1, riga + 2)] for c, o in m_list)
+                    is_v = any(
+                        o == "V" and c in [(col + 1, riga + 1), (col + 1, riga + 2)]
+                        for c, o in m_list
+                    )
                     el_riga.append(m_v if is_v else " ")
             table.add_row(*el_riga)
 

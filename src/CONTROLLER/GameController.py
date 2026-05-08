@@ -45,11 +45,6 @@ class GameController:
     def _setup_commands(self) -> None:
         """Configura i comandi dell'applicazione Typer."""
 
-   
-
-
-      
-
     def _handle_error(self, e: Exception) -> None:
         """Gestisce e visualizza gli errori catturati durante il gioco."""
         valid_errors = (

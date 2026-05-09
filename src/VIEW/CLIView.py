@@ -61,14 +61,8 @@ class CLIView(BaseView):
 
         def get_w_info(w):
             p = w._start_cell
-            c = p.get_coords() if hasattr(p, "get_coords") else (p.x, p.y)
-
-            orient = w._orientation.upper()
-
-            if orient == "H":
-                return (c[0] + 1, c[1] + 2), orient
-            else:
-                return (c[0] + 2, c[1] + 3), orient
+            c = p.get_coords() if hasattr(p, "get_coords") else p
+            return c, w._orientation
 
         # 1. COORDINATE LETTERE (Allineamento corretto: 4 spazi + lettera + 2 spazi)
         c_let = [" "]
@@ -86,16 +80,16 @@ class CLIView(BaseView):
                 el_h = [" "]
                 for c_h in range(1, 10):
                     is_h = any(
-                        o == "H" and c in [(c_h, riga), (c_h - 1, riga)]
+                        o == "h" and c in [(c_h, riga), (c_h - 1, riga)]
                         for c, o in m_list
                     )
                     el_h.append(m_h if is_h else "       ")
                     if c_h < 9:
                         v_h = any(
-                            o == "V" and c in [(c_h + 1, riga), (c_h + 1, riga + 1)]
+                            o == "v" and c in [(c_h + 1, riga), (c_h + 1, riga + 1)]
                             for c, o in m_list
                         )
-                        h_h = any(o == "H" and c == (c_h, riga) for c, o in m_list)
+                        h_h = any(o == "h" and c == (c_h, riga) for c, o in m_list)
                         el_h.append(m_c_v if v_h else (m_c_h if h_h else " "))
                 table.add_row(*el_h)
 
@@ -112,7 +106,7 @@ class CLIView(BaseView):
 
                 if col < 9:
                     is_v = any(
-                        o == "V" and c in [(col + 1, riga + 1), (col + 1, riga + 2)]
+                        o == "v" and c in [(col + 1, riga + 1), (col + 1, riga + 2)]
                         for c, o in m_list
                     )
                     el_riga.append(m_v if is_v else " ")

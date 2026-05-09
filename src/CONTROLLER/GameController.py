@@ -40,7 +40,7 @@ class GameController:
         # CORREZIONE LOGICA:
         # group(1) è la lettera -> Colonna
         # group(2) è il numero -> Riga
-        col = self._COL_MAP[match.group(1)]
+        col = self._COL_MAP[match.group(1)] + 1
         row = int(match.group(2)) - 1
         orientation = match.group(3)
 
@@ -61,7 +61,7 @@ class GameController:
 
                 # 2. Smistiamo la logica al Modello
                 if orient:
-                    dati_muro = (col, row, orient.lower())
+                    dati_muro = (col, row+1, orient.lower())
                     self._model.place_wall(dati_muro)
                 else:
                     self._model.move_player((col, row))

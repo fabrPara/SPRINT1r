@@ -1,4 +1,5 @@
 from Cell import Cell
+from Exception import MovementError
 
 
 class Player:
@@ -9,34 +10,36 @@ class Player:
     """
 
     def __init__(self, player_id: int, start_pos: "Cell", target_row: int):
-    """Inizializza un nuovo giocatore.
+        """Inizializza un nuovo giocatore.
 
-    Args:
-        player_id(int): Identificativo univoco del giocatore.
-        start_pos(Cell): Istanza di Cell che rappresenta la posizione iniziale.
-        target_row(int): La coordinata Y che il giocatore deve raggiungere per vincere.
+        Args:
+            player_id(int): Identificativo univoco del giocatore.
+            start_pos(Cell): Istanza di Cell che rappresenta la posizione iniziale.
+            target_row(int): La coordinata Y che il giocatore deve raggiungere per vincere.
 
-    """  # noqa: E501
-    self._id = player_id
-    self._position = start_pos
-    self._walls_count = 10  # Numero standard di muri in Quoridor
-    self._target_row = target_row
+        """  # noqa: E501
+        self._id = player_id
+        self._position = start_pos
+        self._walls_count = 10  # Numero standard di muri in Quoridor
+        self._target_row = target_row
 
-def get_position(self) -> 'Cell':
-    """Restituisce la cella attualmente occupata dal giocatore.
+    def get_position(self) -> 'Cell':
+        """Restituisce la cella attualmente occupata dal giocatore.
 
-    Returns:
-        Cell: La posizione attuale.
-    """
-    return self._position
+        Returns:
+            Cell: La posizione attuale.
 
-def set_position(self, new_pos: 'Cell'):
-    """Aggiorna la posizione del giocatore sulla board.
+        """
+        return self._position
 
-    Args:
-        new_pos (Cell): La nuova cella in cui spostare il giocatore.
-    """
-    if not isinstance(new_pos, Cell):
-        raise MovementError("La nuova posizione deve essere una Cell valida")
+    def set_position(self, new_pos: 'Cell'):
+        """Aggiorna la posizione del giocatore sulla board.
 
-    self._position = new_pos
+        Args:
+            new_pos (Cell): La nuova cella in cui spostare il giocatore.
+
+        """
+        if not isinstance(new_pos, Cell):
+            raise MovementError("La nuova posizione deve essere una Cell valida")
+
+        self._position = new_pos

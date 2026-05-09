@@ -32,42 +32,53 @@ class Board:
         self._cells: list[Cell] = []  # noqa: F821
         self._walls: list[Wall] = []  # noqa: F821
 
-
     def get_walls(self):
         """Ritorna la lista dei muri attualmente posizionati sulla board."""
         return self._walls
-    
+
     def add_wall(self, wall: Wall) -> None:
-        """Valida e aggiunge un muro alla plancia."""
+        """Valida e aggiunge un muro alla plancia.
+
+        Args:
+            wall (Wall): Il muro orizzontale da aggiungere.
+
+        Raises:
+            WallPlacementError: Se il posizionamento viola le regole.
+
+        """
         self._validate_wall(wall)
         self._walls.append(wall)
 
     def _validate_wall(self, new_wall: Wall) -> None:
-        """Controlla le collisioni e i confini fisici."""
+        """Controlla le collisioni e i confini fisici (solo orizzontali).
+
+        Args:
+            new_wall (Wall): L'oggetto Wall da validare.
+
+        """
         nx = new_wall._start_cell.x
         ny = new_wall._start_cell.y
-        no = new_wall._orientation
 
-        # 1. Controllo dei limiti (la griglia dei muri va da 0 a 7)
+        # 1. Controllo dei limiti della plancia (griglia muri da 0 a 7)
         if nx < 0 or nx > 7 or ny < 0 or ny > 7:
             raise WallPlacementError("Il muro esce dai confini della plancia.")
 
-        # 2. Controllo incroci e sovrapposizioni
+        # 2. Controllo sovrapposizioni con muri esistenti (Issue 3: solo orizzontali)
         for w in self._walls:
             wx = w._start_cell.x
             wy = w._start_cell.y
-            wo = w._orientation
 
-            # Se partono dallo stesso punto esatto
+            # Sovrapposizione esatta (partono dalle stesse identiche coordinate)
             if nx == wx and ny == wy:
-                if no == wo:
-                    raise WallPlacementError("C'è già un muro esattamente in questa posizione.")  # noqa: E501
-                else:
-                    raise WallPlacementError("I muri non possono incrociarsi a croce.")
+                raise WallPlacementError(
+                    "C'è già un muro esattamente in questa posizione."
+                )
 
-            # Sovrapposizione parziale (si toccano sulla stessa linea)
-            if no == 'h' and wo == 'h' and ny == wy and abs(nx - wx) == 1:
-                raise WallPlacementError("Il muro si sovrappone parzialmente a un muro orizzontale esistente.")  # noqa: E501
-            
-            if no == 'v' and wo == 'v' and nx == wx and abs(ny - wy) == 1:
-                raise WallPlacementError("Il muro si sovrappone parzialmente a un muro verticale esistente.")  # noqa: E501
+            # Sovrapposizione parziale (si toccano sulla stessa linea orizzontale)
+            if ny == wy and abs(nx - wx) == 1:
+                raise WallPlacementError(
+                    "Il muro si sovrappone parzialmente a un muro orizzontale esistente"
+                )
+
+
+# TODO DA AGGIUNGERE CONTROLLO "IF NO 'V' " E CONTROLLO SUI MURI A CROCE - ISSUE 4!!!!

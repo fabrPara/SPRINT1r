@@ -51,29 +51,14 @@ class QuoridorGame:
     def check_victory(self):
         pass
 
-    """Converte coordinate come 'e3' in un oggetto Cell (x=4, y=2)."""
-    def _parse_coords(self, coords: str) -> Cell: 
-        if len(coords) != 2:
-            raise InvalidCommandError("Formato coordinate non valido (usa es. e3).")
-        
-        col_char = coords[0].lower()
-        row_char = coords[1]
-
-        if not ('a' <= col_char <= 'i') or not ('1' <= row_char <= '9'):
-            raise InvalidCommandError("Coordinate fuori range (a-i, 1-9).")
-
-        x = ord(col_char) - ord('a') # 'a' diventa 0, 'b' diventa 1...
-        y = int(row_char) - 1        # '1' diventa 0, '2' diventa 1...
-        
-        return Cell(x, y)
-
-    def place_wall(self, coords: str, orient: str) -> None:
+   
+    def place_wall(self, coords: tuple[int, int, str]) -> None:
         """Piazza un muro per il giocatore corrente."""
         if self._winner is not None:
             raise TurnError("La partita è già finita.")
 
-        if orient not in ['h', 'v']:
-            raise InvalidCommandError("Orientamento non valido. Usa 'h' o 'v'.")
+        if coords[2] not in ['h']:
+            raise InvalidCommandError("Orientamento non valido. Usa 'h' .")
 
         current_player = self._players[self._current_turn]
 
@@ -81,8 +66,8 @@ class QuoridorGame:
         current_player.use_wall()
 
         # 2. Traduce le stringhe in oggetti
-        start_cell = self._parse_coords(coords)
-        new_wall = Wall(start_cell=start_cell, orientation=orient)
+        start_cell = Cell(coords[0],coords[1])
+        new_wall = Wall(start_cell=start_cell, orientation=coords[2])
 
         # 3. Prova ad aggiungere il muro alla board
         try:
@@ -93,9 +78,7 @@ class QuoridorGame:
             raise e # Rilanciamo l'errore per farlo gestire al Controller
 
         # Se arriviamo qui, il muro è piazzato. Passiamo il turno.
-        self.switch_turn()
+        #self.switch_turn()
 
-    def switch_turn(self) -> None:
-        """Cambia il turno passando al giocatore successivo."""
-        self._current_turn = 1 - self._current_turn
+    
 

@@ -78,7 +78,7 @@ class QuoridorGame:
             raise e # Rilanciamo l'errore per farlo gestire al Controller
 
         # Se arriviamo qui, il muro è piazzato. Passiamo il turno.
-        #self.switch_turn()
+       
 
     
 

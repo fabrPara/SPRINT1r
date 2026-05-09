@@ -37,4 +37,3 @@ class Wall:
 
         """
         return self._orientation
-

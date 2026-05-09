@@ -51,22 +51,21 @@ class QuoridorGame:
     def check_victory(self):
         pass
 
-   
     def place_wall(self, coords: tuple[int, int, str]) -> None:
         """Piazza un muro per il giocatore corrente."""
         if self._winner is not None:
             raise TurnError("La partita è già finita.")
 
-        if coords[2] not in ['h']:
+        if coords[2] not in ["h"]:
             raise InvalidCommandError("Orientamento non valido. Usa 'h' .")
 
-        current_player = self._players[self._current_turn]
+        current_player = self._players[self._current_turn - 1]
 
         # 1. Controlla e scala il muro dal giocatore (lancia errore se a 0)
         current_player.use_wall()
 
         # 2. Traduce le stringhe in oggetti
-        start_cell = Cell(coords[0],coords[1])
+        start_cell = Cell(coords[0], coords[1])
         new_wall = Wall(start_cell=start_cell, orientation=coords[2])
 
         # 3. Prova ad aggiungere il muro alla board
@@ -74,11 +73,7 @@ class QuoridorGame:
             self._board.add_wall(new_wall)
         except Exception as e:
             # Se la board rifiuta il muro, dobbiamo restituirlo al giocatore!
-            current_player._walls_count += 1 
-            raise e # Rilanciamo l'errore per farlo gestire al Controller
+            current_player._walls_count += 1
+            raise e  # Rilanciamo l'errore per farlo gestire al Controller
 
         # Se arriviamo qui, il muro è piazzato. Passiamo il turno.
-       
-
-    
-

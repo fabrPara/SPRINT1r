@@ -61,8 +61,14 @@ class CLIView(BaseView):
 
         def get_w_info(w):
             p = w._start_cell
-            c = p.get_coords() if hasattr(p, "get_coords") else p
-            return c, w._orientation
+            c = p.get_coords() if hasattr(p, "get_coords") else (p.x, p.y)
+
+            orient = w._orientation.upper()
+
+            if orient == "H":
+                return (c[0] + 1, c[1] + 2), orient
+            else:
+                return (c[0] + 2, c[1] + 3), orient
 
         # 1. COORDINATE LETTERE (Allineamento corretto: 4 spazi + lettera + 2 spazi)
         c_let = [" "]

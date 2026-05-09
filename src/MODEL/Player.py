@@ -22,9 +22,9 @@ class Player:
         self._position = start_pos
         self._walls_count = 10  # Numero standard di muri in Quoridor
         self._target_row = target_row
-    
+
     """ ritorna il numero di muri rimanenti del giocatore. """
-    
+
     def get_walls_count(self) -> int:
         return self._walls_count
 

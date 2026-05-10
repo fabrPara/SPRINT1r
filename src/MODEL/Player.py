@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-from Cell import Cell
-from Exception import MovementError
-=======
 from .Cell import Cell
 from .Exception import WallDepletionError
->>>>>>> MoveSwitchPlayer
 
 
 class Player:
@@ -28,31 +23,8 @@ class Player:
         self._walls_count = 10  # Numero standard di muri in Quoridor
         self._target_row = target_row
 
-<<<<<<< HEAD
-    def get_position(self) -> 'Cell':
-        """Restituisce la cella attualmente occupata dal giocatore.
-
-        Returns:
-            Cell: La posizione attuale.
-
-        """
-        return self._position
-
-    def set_position(self, new_pos: 'Cell'):
-        """Aggiorna la posizione del giocatore sulla board.
-
-        Args:
-            new_pos (Cell): La nuova cella in cui spostare il giocatore.
-
-        """
-        if not isinstance(new_pos, Cell):
-            raise MovementError("La nuova posizione deve essere una Cell valida")
-
-        self._position = new_pos
-=======
-    """ ritorna il numero di muri rimanenti del giocatore. """
-
     def get_walls_count(self) -> int:
+        """Ritorna il numero di muri rimanenti del giocatore."""
         return self._walls_count
 
     def use_wall(self) -> None:
@@ -68,4 +40,3 @@ class Player:
     def set_position(self, new_position: "Cell") -> None:
         """Aggiorna la posizione corrente del giocatore."""
         self._position = new_position
->>>>>>> MoveSwitchPlayer

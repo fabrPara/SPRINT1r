@@ -33,3 +33,11 @@ class Player:
         if self._walls_count <= 0:
             raise WallDepletionError("Non hai più muri a disposizione!")
         self._walls_count -= 1
+
+    def get_position(self) -> "Cell":
+        """Restituisce la posizione corrente del giocatore."""
+        return self._position
+
+    def set_position(self, new_position: "Cell") -> None:
+        """Aggiorna la posizione corrente del giocatore."""
+        self._position = new_position

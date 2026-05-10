@@ -61,6 +61,12 @@ class GameController:
                         self._model.place_wall((col, row, orient.lower()))
 
 
+                    case "move":
+                        if not argomento:
+                            raise InvalidCommandError("Uso: move [A-I][1-9]")
+                        col, row, _ = self._parse_coords(argomento)
+                        self._model.move_player((col, row))
+
                     case _:
                         # Solleva InvalidCommandError se il comando è ignoto
                         raise InvalidCommandError(

@@ -15,85 +15,61 @@ from src.VIEW.BaseView import BaseView
 
 
 class GameController:
-    """Gestisce l'input utente e coordina Modello e Vista."""
+    """Gestisce l'input dell'utente e coordina il flusso tra Modello e Vista."""
 
     def __init__(self, model: QuoridorGame, view: BaseView):
-        """Inizializza il controller con modello e vista."""
+        """Inizializza il controller con le istanze di modello e vista."""
         self._model = model
         self._view = view
         self._COL_MAP = {char: i for i, char in enumerate("ABCDEFGHI")}
-        self._app = typer.Typer(add_completion=False)
+        self._app = typer.Typer(
+            add_completion=False,
+            help="Gestione comandi Quoridor.",
+        )
         self._setup_commands()
 
     def _parse_coords(self, coords_str: str) -> tuple[int, int, str | None]:
-        """Traduce coordinate tipo 'E3' o 'E3H' in indici numerici."""
-        match = re.match(r"^([A-I])([1-9])([HV])?$", coords_str.upper())
+        """Traduce stringhe tipo '3B' o '2AV' in indici numerici."""
+        match = re.match(r"^([1-9])([A-I])([HV])?$", coords_str.upper())
+
         if not match:
-            msg = f"Formato '{coords_str}' errato. Usa [A-I][1-9] (es. B2 o B2H)"
+            msg = f"Input '{coords_str}' non valido. Usa il formato [1-9][A-I][H/V]."
             raise InvalidCommandError(msg)
 
-        col = self._COL_MAP[match.group(1)] + 1
-        row = int(match.group(2))
-        orient = match.group(3).upper() if match.group(3) else None
-        return col, row, orient
+        row = int(match.group(1)) - 1
+        col = self._COL_MAP[match.group(2)]
+        orientation = match.group(3)
+
+        return row, col, orientation
 
     def _setup_commands(self) -> None:
-        """Configura i comandi con logica match-case."""
+        """Configura i comandi dell'applicazione Typer."""
 
-        @self._app.callback(invoke_without_command=True)
-        def process_command(
-            ctx: typer.Context,
-            comando: str = typer.Argument(..., help="Comando da eseguire"),
-            argomento: str = typer.Argument(None, help="Coordinate (es. b2h)")
-        ):
-            if ctx.resilient_parsing:
-                return
-
-            try:
-                match comando.lower():
-                    
-                    case "wall":
-                        if not argomento:
-                            raise InvalidCommandError("Uso: wall [A-I][1-9][H/V]")
-                        col, row, orient = self._parse_coords(argomento)
-                        if not orient:
-                            raise InvalidCommandError("Manca orientamento (H/V)")
-                        self._model.place_wall((col, row, orient.lower()))
+   
 
 
-                    case "move":
-                        if not argomento:
-                            raise InvalidCommandError("Uso: move [A-I][1-9]")
-                        col, row, _ = self._parse_coords(argomento)
-                        self._model.move_player((col, row))
-
-                    case _:
-                        # Solleva InvalidCommandError se il comando è ignoto
-                        raise InvalidCommandError(
-                            f"Comando '{comando}' non riconosciuto. "
-                            "Digita 'help' per la lista comandi."
-                        )
-
-                self._render_game()
-
-            except Exception as e:
-                self._handle_error(e)
+      
 
     def _handle_error(self, e: Exception) -> None:
-        """Visualizza gli errori tramite la vista."""
+        """Gestisce e visualizza gli errori catturati durante il gioco."""
         valid_errors = (
-            MovementError, WallPlacementError, WallDepletionError,
-            TurnError, InvalidCommandError,
+            MovementError,
+            WallPlacementError,
+            WallDepletionError,
+            TurnError,
+            InvalidCommandError,
         )
-        msg = str(e) if isinstance(e, valid_errors) else f"Errore: {e}"
-        self._view.show_error(msg)
+        if isinstance(e, valid_errors):
+            self._view.show_error(str(e))
+        else:
+            self._view.show_error(f"Errore inatteso: {e}")
 
     def _render_game(self) -> None:
-        """Richiede il rendering dello stato attuale."""
+        """Richiede alla vista di renderizzare lo stato attuale del gioco."""
         self._view.render(self._model.get_game_state())
 
     def start_game(self) -> None:
-        """Ciclo principale di gioco interattivo."""
+        """Avvia il ciclo principale di gioco interattivo."""
         self._render_game()
         while not self._model.check_victory():
             user_input = self._view.get_input()

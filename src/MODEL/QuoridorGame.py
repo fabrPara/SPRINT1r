@@ -1,8 +1,8 @@
 from .Board import Board
 from .Cell import Cell
-from .Exception import InvalidCommandError, MovementError, TurnError
 from .Player import Player
-from .Wall import Wall
+
+##importare la classe Exeption per gli tutti gli errori del gioco
 
 
 class QuoridorGame:
@@ -13,93 +13,39 @@ class QuoridorGame:
     """
 
     def __init__(self):
-        """Inizializza una nuova partita di Quoridor."""
-        self._board = Board()
-
-        p1_start = Cell(5, 1)
-        p2_start = Cell(5, 9)
-
-        p1 = Player(player_id=1, start_pos=p1_start, target_row=9)
-        p2 = Player(player_id=2, start_pos=p2_start, target_row=1)
-
-        self._players = [p1, p2]
-        self._current_turn = 1
-        self._winner = None
-
-    def switch_turn(self):
-        """Cambia il turno passando al giocatore successivo."""
-        self._current_turn = 2 if self._current_turn == 1 else 1
-
-    def move_player(self, coords: tuple[int, int]) -> None:
-        """Muove il giocatore corrente nella cella specificata dalle coordinate.
+        """Inizializza una nuova partita di Quoridor.
 
         Args:
-            coords (tuple[int, int]): Le coordinate della destinazione nel formato
-                (x, y).
-
-        Raises:
-            MovementError: Se il movimento non è consentito.
+            Board: classe che rappresenta il tabellone di gioco
+            Player: classe che rappresenta un giocatore
+            Cell: classe che rappresenta una cella del tabellone
 
         """
-        if len(coords) != 2:
-            raise MovementError("Formato coordinate non valido. Usa una tupla (x, y).")
+        self._board = Board()  # crea il tabellone
 
-        target_x, target_y = coords
+        # crea i giocatori
+        p1_start = Cell(5, 1)  # posizione iniziale del giocatore 1
+        p2_start = Cell(5, 9)  # posizione iniziale del giocatore 2
+        p1 = Player(player_id=1, start_pos=p1_start, target_row=8) 
+        p2 = Player(player_id=2, start_pos=p2_start, target_row=0) 
+        self._players = [p1, p2]
+       
 
-        if not isinstance(target_x, int) or not isinstance(target_y, int):
-            raise MovementError("Coordinate non valide. Usa numeri interi.")
-
-        current_player = self._players[self._current_turn - 1]
-        current_pos = current_player.get_position()
-        curr_x, curr_y = current_pos.get_coords()
-
-        dx = abs(target_x - curr_x)
-        dy = abs(target_y - curr_y)
-
-        if not ((dx == 1 and dy == 0) or (dx == 0 and dy == 1)):
-            raise MovementError(
-                "Movimento non valido: puoi muoverti solo di una cella in "
-                "orizzontale o verticale."
-            )
-
-        current_player.set_position(Cell(target_x, target_y))
-        self.switch_turn()
-
+        self._current_turn = 1  ##indice del giocatore che deve muovere (1 o 2)
+        self._winner = None
     def get_game_state(self) -> dict:
-        """Ritorna lo stato attuale del gioco per permetterne il rendering."""
+        """Ritorna lo stato attuale del gioco per permetterne il rendering.
+        
+        Returns:
+            dict: Contiene i riferimenti alla board, alla lista giocatori,
+                  all'indice del giocatore corrente e all'eventuale vincitore.
+
+        """
         return {
             "board": self._board,
             "players": self._players,
             "current_player_id": self._current_turn,
-            "winner": self._winner,
+            "winner": self._winner
         }
-
-    def check_victory(self) -> bool:
-        """Verifica se un giocatore ha raggiunto la riga di vittoria."""
-        for player in self._players:
-            if player.get_position().get_coords()[1] == player._target_row:
-                self._winner = player._id
-                return True
-        return False
-
-    def place_wall(self, coords: tuple[int, int, str]) -> None:
-        """Piazza un muro per il giocatore corrente."""
-        if self._winner is not None:
-            raise TurnError("La partita è già finita.")
-
-        if len(coords) != 3 or coords[2] not in ["h", "v"]:
-            raise InvalidCommandError("Orientamento non valido. Usa 'h' o 'v'.")
-
-        current_player = self._players[self._current_turn - 1]
-        current_player.use_wall()
-
-        start_cell = Cell(coords[0], coords[1])
-        new_wall = Wall(start_cell=start_cell, orientation=coords[2])
-
-        try:
-            self._board.add_wall(new_wall)
-        except Exception as e:
-            current_player._walls_count += 1
-            raise e
-
-        self.switch_turn()
+    def check_victory(self):
+        pass

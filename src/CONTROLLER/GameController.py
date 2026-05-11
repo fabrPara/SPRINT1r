@@ -83,7 +83,7 @@ class GameController:
         """Visualizza gli errori tramite la vista."""
         valid_errors = (
             MovementError, WallPlacementError, WallDepletionError,
-            TurnError, InvalidCommandError,
+            InvalidCommandError, TurnError
         )
         msg = str(e) if isinstance(e, valid_errors) else f"Errore: {e}"
         self._view.show_error(msg)

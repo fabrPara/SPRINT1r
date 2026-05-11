@@ -59,8 +59,8 @@ class Board:
         nx = new_wall._start_cell.x
         ny = new_wall._start_cell.y
 
-        # 1. Controllo dei limiti della plancia (griglia muri da 0 a 7)
-        if nx < 0 or nx > 7 or ny < 0 or ny > 7:
+       
+        if nx < 2 or nx > 8 or ny < 1 or ny > 9:
             raise WallPlacementError("Il muro esce dai confini della plancia.")
 
         # 2. Controllo sovrapposizioni con muri esistenti (Issue 3: solo orizzontali)

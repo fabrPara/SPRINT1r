@@ -33,6 +33,12 @@ class CLIView(BaseView):
         self._draw_board(board_data, player_data)
 
     def _draw_stats(self, players_data: dict):
+        """Stampa le statistiche della partita come il turno attuale e i muri rimanenti.
+
+        Args:
+            players_data (dict): _description_
+
+        """
         self._console.print("\n[bold cyan]--- QUORIDOR - SPRINT 1 ---[/bold cyan]")
 
         turno = players_data.get("current_player_id", [])
@@ -127,7 +133,11 @@ class CLIView(BaseView):
         return comando.strip().lower()
 
     def show_error(self, message: str) -> None:
-        pass
+        """Prende la stringa dell'errore dal Controller e la stampa a video."""
+        #print(f"\n[ERRORE]: {message}")
+        print("-" * 20)
+        print(f"Attenzione: {message}")
+        print("-" * 20)
 
     def show_victory(self, player_id: int) -> None:
         pass

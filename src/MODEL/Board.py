@@ -60,9 +60,10 @@ class Board:
         ny = new_wall._start_cell.y
 
        
-        if nx < 2 or nx > 8 or ny < 1 or ny > 9:
+        if nx < 2 or nx > 8 or ny < 2 or ny > 9:
             raise WallPlacementError("Il muro esce dai confini della plancia.")
-
+        
+       
         # 2. Controllo sovrapposizioni con muri esistenti (Issue 3: solo orizzontali)
         for w in self._walls:
             wx = w._start_cell.x

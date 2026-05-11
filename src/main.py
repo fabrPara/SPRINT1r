@@ -1,5 +1,6 @@
 """Punto di ingresso principale per l'applicazione Quoridor."""
 
+
 from rich import print
 
 from src.CONTROLLER.GameController import GameController

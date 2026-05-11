@@ -31,16 +31,7 @@ class QuoridorGame:
         self._current_turn = 2 if self._current_turn == 1 else 1
 
     def move_player(self, coords: tuple[int, int]) -> None:
-        """Muove il giocatore corrente nella cella specificata dalle coordinate.
-
-        Args:
-            coords (tuple[int, int]): Le coordinate della destinazione nel formato
-                (x, y).
-
-        Raises:
-            MovementError: Se il movimento non è consentito.
-
-        """
+        """Muove il giocatore corrente nella cella specificata dalle coordinate."""
         if len(coords) != 2:
             raise MovementError("Formato coordinate non valido. Usa una tupla (x, y).")
 
@@ -49,18 +40,46 @@ class QuoridorGame:
         if not isinstance(target_x, int) or not isinstance(target_y, int):
             raise MovementError("Coordinate non valide. Usa numeri interi.")
 
+        # --- CONTROLLO 1: Confini della scacchiera ---
+        if not (1 <= target_x <= 9 and 1 <= target_y <= 9):
+            raise MovementError("Movimento fuori dai confini della scacchiera (1-9).")
+
         current_player = self._players[self._current_turn - 1]
         current_pos = current_player.get_position()
         curr_x, curr_y = current_pos.get_coords()
 
-        dx = abs(target_x - curr_x)
-        dy = abs(target_y - curr_y)
+        # --- CONTROLLO 2: Cella occupata da un altro giocatore ---
+        for player in self._players:
+            p_pos = player.get_position().get_coords()
+            if target_x == p_pos[0] and target_y == p_pos[1]:
+                raise MovementError("La cella è già occupata da un altro giocatore.")
 
-        if not ((dx == 1 and dy == 0) or (dx == 0 and dy == 1)):
+        dx = target_x - curr_x
+        dy = target_y - curr_y
+
+        if not ((abs(dx) == 1 and dy == 0) or (dx == 0 and abs(dy) == 1)):
             raise MovementError(
-                "Movimento non valido: puoi muoverti solo di una cella in "
-                "orizzontale o verticale."
+                "Movimento non valido: puoi muoverti solo di una cella."
             )
+
+        # --- CONTROLLO 3: Presenza di muri basato sul vostro sistema ---
+        for wall in self._board.get_walls():
+            wx, wy = wall.get_start_cell().get_coords()
+            w_orient = wall.get_orientation().lower()
+
+            # Movimento Verticale (dy != 0)
+            # Un muro H in (wx, wy) blocca il passaggio tra y e y-1 
+            # se la colonna è wx o wx+1.
+            if (dy != 0 and w_orient == "h" and 
+                wy == max(curr_y, target_y) and (wx == curr_x or wx == curr_x - 1)):
+                raise MovementError("Un muro orizzontale blocca il passaggio.")
+
+            # Movimento Orizzontale (dx != 0)
+            # Un muro V in (wx, wy) blocca il passaggio tra x e x-1
+            # se la riga è wy o wy-1.
+            if (dx != 0 and w_orient == "v" and 
+                wx == max(curr_x, target_x) and (wy == curr_y or wy == curr_y + 1)):
+                raise MovementError("Un muro verticale blocca il passaggio.")
 
         current_player.set_position(Cell(target_x, target_y))
         self.switch_turn()

@@ -66,6 +66,12 @@ class GameController:
                         col, row, _ = self._parse_coords(argomento)
                         self._model.move_player((col, row))
 
+                    case "abbandona":
+                        winner_id = self._model.resign_current_player()
+                        self._view.show_exit(winner_id)
+                        self._exit_requested = True
+                        return
+
                     case _:
                         # Solleva InvalidCommandError se il comando è ignoto
                         raise InvalidCommandError(

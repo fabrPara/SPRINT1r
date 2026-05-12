@@ -143,3 +143,11 @@ class CLIView(BaseView):
         )
         self._console.print("\n")
         self._console.print(victory_message)
+
+    def show_exit(self, winner_id: int) -> None:
+        """Mostra il messaggio di uscita dalla partita e il vincitore."""
+        self._console.print(
+            "\n[bold yellow]Hai abbandonato la partita. "
+            f"Di conseguenza il giocatore P{winner_id} ha vinto! "
+            "Alla prossima![/bold yellow]"
+        )

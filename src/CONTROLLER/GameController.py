@@ -108,3 +108,7 @@ class GameController:
                     break
                 continue
 
+        # Mostra il messaggio di vittoria
+        game_state = self._model.get_game_state()
+        winner_id = game_state["winner"]
+        self._view.show_victory(winner_id)

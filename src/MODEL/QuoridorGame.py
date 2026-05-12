@@ -150,3 +150,17 @@ class QuoridorGame:
 
         self._winner = 2 if self._current_turn == 1 else 1
         return self._winner
+
+    def reset(self) -> None:
+        """Resetta il gioco per una nuova partita."""
+        self._board = Board()
+
+        p1_start = Cell(5, 1)
+        p2_start = Cell(5, 9)
+
+        p1 = Player(player_id=1, start_pos=p1_start, target_row=9)
+        p2 = Player(player_id=2, start_pos=p2_start, target_row=1)
+
+        self._players = [p1, p2]
+        self._current_turn = 1
+        self._winner = None

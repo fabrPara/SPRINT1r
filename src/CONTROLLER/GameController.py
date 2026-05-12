@@ -69,7 +69,23 @@ class GameController:
                     case "abbandona":
                         winner_id = self._model.resign_current_player()
                         self._view.show_exit(winner_id)
+                        response = self._view.prompt_new_game()
+                        if response == "s":
+                            self._reset_game()
+                            self._render_game()
+                        else:
+                            self._view.show_exit_message()
+                            self._exit_requested = True
+                        return
+
+                    case "exit":
+                        self._view.show_exit_message()
                         self._exit_requested = True
+                        return
+
+                    case "help":
+                        self._view.show_help()
+                        self._render_game()
                         return
 
                     case _:
@@ -100,8 +116,13 @@ class GameController:
         """Richiede il rendering dello stato attuale."""
         self._view.render(self._model.get_game_state())
 
+    def _reset_game(self) -> None:
+        """Resetta il gioco per una nuova partita."""
+        self._model.reset()
+
     def start_game(self) -> None:
         """Ciclo principale di gioco interattivo."""
+        self._view.show_initial_message()
         self._render_game()
         while not self._model.check_victory() and not self._exit_requested:
             user_input = self._view.get_input()

@@ -130,3 +130,7 @@ class Board:
                         "esistente in quella posizione."
                     )
                     raise WallPlacementError(msg)
+
+                # Controllo incrocio (stessa posizione, orientamenti diversi)
+                if nx == wx and ny == wy:
+                    raise WallPlacementError("I muri non possono incrociarsi.")

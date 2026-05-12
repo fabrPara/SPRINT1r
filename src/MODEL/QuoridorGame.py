@@ -68,17 +68,25 @@ class QuoridorGame:
             w_orient = wall.get_orientation().lower()
 
             # Movimento Verticale (dy != 0)
-            # Un muro H in (wx, wy) blocca il passaggio tra y e y-1 
+            # Un muro H in (wx, wy) blocca il passaggio tra y e y-1
             # se la colonna è wx o wx+1.
-            if (dy != 0 and w_orient == "h" and 
-                wy == max(curr_y, target_y) and (wx == curr_x or wx == curr_x - 1)):
+            if (
+                dy != 0
+                and w_orient == "h"
+                and wy == max(curr_y, target_y)
+                and (wx == curr_x or wx == curr_x - 1)
+            ):
                 raise MovementError("Un muro orizzontale blocca il passaggio.")
 
             # Movimento Orizzontale (dx != 0)
             # Un muro V in (wx, wy) blocca il passaggio tra x e x-1
             # se la riga è wy o wy-1.
-            if (dx != 0 and w_orient == "v" and 
-                wx == max(curr_x, target_x) and (wy == curr_y or wy == curr_y + 1)):
+            if (
+                dx != 0
+                and w_orient == "v"
+                and wx == max(curr_x, target_x)
+                and (wy == curr_y or wy == curr_y + 1)
+            ):
                 raise MovementError("Un muro verticale blocca il passaggio.")
 
         current_player.set_position(Cell(target_x, target_y))
@@ -114,6 +122,6 @@ class QuoridorGame:
             self._board.add_wall(new_wall)
         except Exception as e:
             current_player._walls_count += 1
-            raise e 
+            raise e
 
         self.switch_turn()

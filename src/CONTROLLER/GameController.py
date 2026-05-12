@@ -21,6 +21,7 @@ class GameController:
         """Inizializza il controller con modello e vista."""
         self._model = model
         self._view = view
+        self._exit_requested = False
         self._COL_MAP = {char: i for i, char in enumerate("ABCDEFGHI")}
         self._app = typer.Typer(add_completion=False)
         self._setup_commands()
@@ -96,7 +97,7 @@ class GameController:
     def start_game(self) -> None:
         """Ciclo principale di gioco interattivo."""
         self._render_game()
-        while not self._model.check_victory():
+        while not self._model.check_victory() and not self._exit_requested:
             user_input = self._view.get_input()
             if not user_input:
                 continue
@@ -108,7 +109,10 @@ class GameController:
                     break
                 continue
 
-        # Mostra il messaggio di vittoria
-        game_state = self._model.get_game_state()
-        winner_id = game_state["winner"]
-        self._view.show_victory(winner_id)
+        if self._exit_requested:
+            return
+
+        if self._model.check_victory():
+            game_state = self._model.get_game_state()
+            winner_id = game_state["winner"]
+            self._view.show_victory(winner_id)

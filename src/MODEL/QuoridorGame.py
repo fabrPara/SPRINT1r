@@ -142,3 +142,11 @@ class QuoridorGame:
             raise e
 
         self.switch_turn()
+
+    def resign_current_player(self) -> int:
+        """Riconosce la resa del giocatore di turno e restituisce il vincitore."""
+        if self._winner is not None:
+            return self._winner
+
+        self._winner = 2 if self._current_turn == 1 else 1
+        return self._winner

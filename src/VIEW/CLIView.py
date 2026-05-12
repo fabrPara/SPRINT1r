@@ -93,7 +93,7 @@ class CLIView(BaseView):
                         for c, o in m_list
                     )
                     el_h.append(m_h if is_h else "       ")
-                    
+
                     if c_h < 9:
                         # Incrocio: mostra il muro verticale se passa di lì
                         v_h = any(o == "v" and c == (c_h, riga - 1) for c, o in m_list)

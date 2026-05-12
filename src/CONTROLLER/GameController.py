@@ -107,3 +107,4 @@ class GameController:
                 if self._model.check_victory():
                     break
                 continue
+

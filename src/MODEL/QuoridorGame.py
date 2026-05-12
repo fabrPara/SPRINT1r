@@ -102,7 +102,24 @@ class QuoridorGame:
         }
 
     def check_victory(self) -> bool:
-        pass
+        """Controlla se uno dei giocatori ha raggiunto la vittoria.
+
+        Un giocatore vince quando raggiunge la sua riga target.
+        P1 vince raggiungendo riga 9, P2 vince raggiungendo riga 1.
+
+        Returns:
+            bool: True se c'è un vincitore, False altrimenti.
+
+        """
+        for player in self._players:
+            current_pos = player.get_position().get_coords()
+            current_row = current_pos[1]
+
+            if current_row == player._target_row:
+                self._winner = player._id
+                return True
+
+        return False
 
     def place_wall(self, coords: tuple[int, int, str]) -> None:
         """Piazza un muro per il giocatore corrente."""

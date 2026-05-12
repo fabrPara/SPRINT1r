@@ -134,7 +134,7 @@ class CLIView(BaseView):
 
     def show_error(self, message: str) -> None:
         """Prende la stringa dell'errore dal Controller e la stampa a video."""
-        #print(f"\n[ERRORE]: {message}")
+        # print(f"\n[ERRORE]: {message}")
         print("-" * 20)
         print(f"Attenzione: {message}")
         print("-" * 20)

@@ -44,14 +44,13 @@ class GameController:
         def process_command(
             ctx: typer.Context,
             comando: str = typer.Argument(..., help="Comando da eseguire"),
-            argomento: str = typer.Argument(None, help="Coordinate (es. b2h)")
+            argomento: str = typer.Argument(None, help="Coordinate (es. b2h)"),
         ):
             if ctx.resilient_parsing:
                 return
 
             try:
                 match comando.lower():
-                    
                     case "wall":
                         if not argomento:
                             raise InvalidCommandError("Uso: wall [A-I][1-9][H/V]")
@@ -59,7 +58,6 @@ class GameController:
                         if not orient:
                             raise InvalidCommandError("Manca orientamento (H/V)")
                         self._model.place_wall((col, row, orient.lower()))
-
 
                     case "move":
                         if not argomento:
@@ -82,8 +80,11 @@ class GameController:
     def _handle_error(self, e: Exception) -> None:
         """Visualizza gli errori tramite la vista."""
         valid_errors = (
-            MovementError, WallPlacementError, WallDepletionError,
-            InvalidCommandError, TurnError
+            MovementError,
+            WallPlacementError,
+            WallDepletionError,
+            InvalidCommandError,
+            TurnError,
         )
         msg = str(e) if isinstance(e, valid_errors) else f"Errore: {e}"
         self._view.show_error(msg)

@@ -1,4 +1,4 @@
-"""Modulo per la gestione del tabellone di gioco."""
+"""Modulo per la gestione della scacchiera di gioco."""
 
 from .Cell import Cell
 from .Exception import WallPlacementError
@@ -6,15 +6,15 @@ from .Wall import Wall
 
 
 class Board:
-    """Rappresenta il tabellone di gioco.
+    """Rappresenta la scacchiera di gioco.
 
-    Questa classe gestisce gli elementi strutturali del tabellone,
+    Questa classe gestisce gli elementi strutturali della scacchiera,
     mantenendo traccia delle celle che lo compongono e dei muri
     posizionati al suo interno.
     """
 
     def __init__(self):
-        """Inizializza una nuova istanza del tabellone (Board).
+        """Inizializza una nuova istanza della scacchiera (Board).
 
         Crea le strutture dati iniziali (liste vuote) necessarie per
         memorizzare le celle e i muri. Gli attributi sono definiti
@@ -37,7 +37,7 @@ class Board:
         return self._walls
 
     def add_wall(self, wall: Wall) -> None:
-        """Valida e aggiunge un muro alla plancia.
+        """Valida e aggiunge un muro alla scacchiera.
 
         Args:
             wall (Wall): Il muro orizzontale da aggiungere.
@@ -60,7 +60,7 @@ class Board:
         ny = new_wall.get_start_cell().y
         orientation = new_wall.get_orientation().lower()
 
-        # 1. Controllo confini della plancia
+        # 1. Controllo confini della scacchiera
         if orientation == "h":
             if nx < 1 or nx > 8 or ny < 2 or ny > 9:
                 if nx == 9 or ny == 1:
@@ -69,10 +69,10 @@ class Board:
                         "esce parzialmente dalla scacchiera"
                     )
                     raise WallPlacementError(msg)
-                raise WallPlacementError("Il muro esce dai confini della plancia.")
+                raise WallPlacementError("Il muro esce dai confini della scacchiera.")
         elif orientation == "v":
-            if nx < 1 or nx > 9 or ny < 2 or ny > 9:
-                raise WallPlacementError("Il muro esce dai confini della plancia.")
+            if nx < 1 or nx > 9 or ny < 2 or ny > 8:
+                raise WallPlacementError("Il muro esce dai confini della scacchiera.")
         else:
             raise WallPlacementError("Orientamento muro non valido.")
 
@@ -101,31 +101,7 @@ class Board:
                         "verticale esistente"
                     )
 
-            # Sovrapposizione a croce tra un muro orizzontale e uno verticale
-            if orientation != w_orientation:
-                if (
-                    orientation == "h"
-                    and w_orientation == "v"
-                    and nx + 1 == wx
-                    and ny == wy
-                ):
-                    msg = (
-                        "Il muro si sovrappone parzialmente a un muro "
-                        "esistente in quella posizione."
-                    )
-                    raise WallPlacementError(msg)
-                if (
-                    orientation == "v"
-                    and w_orientation == "h"
-                    and nx == wx + 1
-                    and ny == wy
-                ):
-                    msg = (
-                        "Il muro si sovrappone parzialmente a un muro "
-                        "esistente in quella posizione."
-                    )
-                    raise WallPlacementError(msg)
+            # Incrocio tra muri di orientamenti diversi
+            if orientation != w_orientation and nx == wx and ny == wy:
+                raise WallPlacementError("I muri non possono incrociarsi.")
 
-                # Controllo incrocio (stessa posizione, orientamenti diversi)
-                if nx == wx and ny == wy:
-                    raise WallPlacementError("I muri non possono incrociarsi.")

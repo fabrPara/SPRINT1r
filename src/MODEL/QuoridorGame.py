@@ -8,7 +8,7 @@ from .Wall import Wall
 class QuoridorGame:
     """Classe principale per il gioco Quoridor.
 
-    Gestisce la logica del tabellone, i giocatori e il loro turno.
+    Gestisce la logica della scacchiera, i giocatori e il loro turno.
     Fornisce metodi per muovere i giocatori, posizionare muri, verificare il vincitore.
     """
 
@@ -69,19 +69,21 @@ class QuoridorGame:
             w_orient = wall.get_orientation().lower()
 
             # Movimento Verticale (dy != 0)
+            # Un muro orizzontale blocca il movimento tra wy e wy+1
             if (
                 dy != 0
                 and w_orient == "h"
-                and wy in (curr_y, target_y)
+                and ((dy > 0 and wy == curr_y) or (dy < 0 and wy == target_y))
                 and (wx == curr_x or wx == curr_x - 1)
             ):
                 raise MovementError("Un muro orizzontale blocca la strada")
 
             # Movimento Orizzontale (dx != 0)
+            # Un muro verticale a (wx, wy) blocca il movimento dal confine tra wx e wx+1
             if (
                 dx != 0
                 and w_orient == "v"
-                and wx in (curr_x, target_x)
+                and ((dx > 0 and wx == curr_x) or (dx < 0 and wx == target_x))
                 and (wy == curr_y or wy == curr_y - 1)
             ):
                 raise MovementError("Un muro verticale blocca la strada")

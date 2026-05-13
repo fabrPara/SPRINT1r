@@ -23,7 +23,7 @@ class WallDepletionError(QuoridorError):
 
 
 class TurnError(QuoridorError):
-    """Lanciata se si tenta un'azione fuori turno."""
+    """lanciata quando un giocatore tenta di agire fuori dal proprio turno."""
 
     pass
 

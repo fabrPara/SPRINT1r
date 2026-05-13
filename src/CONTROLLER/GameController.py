@@ -21,6 +21,7 @@ class GameController:
         """Inizializza il controller con le istanze di modello e vista."""
         self._model = model
         self._view = view
+        self._exit_requested = False
         self._COL_MAP = {char: i for i, char in enumerate("ABCDEFGHI")}
         self._app = typer.Typer(
             add_completion=False,
@@ -29,26 +30,69 @@ class GameController:
         self._setup_commands()
 
     def _parse_coords(self, coords_str: str) -> tuple[int, int, str | None]:
-        """Traduce stringhe tipo '3B' o '2AV' in indici numerici."""
-        match = re.match(r"^([1-9])([A-I])([HV])?$", coords_str.upper())
-
+        """Traduce coordinate tipo 'E3' o 'E3H' in indici numerici."""
+        match = re.match(r"^([A-Ia-i])([1-9])([HVhv])?$", coords_str)
         if not match:
-            msg = f"Input '{coords_str}' non valido. Usa il formato [1-9][A-I][H/V]."
+            msg = f"Formato '{coords_str}' errato. Usa [A-I][1-9] (es. b2 o b2h)"
             raise InvalidCommandError(msg)
 
-        row = int(match.group(1)) - 1
-        col = self._COL_MAP[match.group(2)]
-        orientation = match.group(3)
-
-        return row, col, orientation
+        col = self._COL_MAP[match.group(1).upper()] + 1
+        row = int(match.group(2))
+        orient = match.group(3).lower() if match.group(3) else None
+        return col, row, orient
 
     def _setup_commands(self) -> None:
         """Configura i comandi dell'applicazione Typer."""
 
-   
+        @self._app.callback(invoke_without_command=True)
+        def process_command(
+            ctx: typer.Context,
+            comando: str = typer.Argument(..., help="Comando da eseguire"),
+        ):
+            if ctx.resilient_parsing:
+                return
 
+            try:
+                comando_lower = comando.lower()
 
-      
+                # Comandi speciali
+                match comando_lower:
+                    case "abbandona":
+                        winner_id = self._model.resign_current_player()
+                        self._view.show_exit(winner_id)
+                        response = self._view.prompt_new_game()
+                        if response == "s":
+                            self._reset_game()
+                            self._render_game()
+                        else:
+                            self._view.show_exit_message()
+                            self._exit_requested = True
+                        return
+
+                    case "exit":
+                        self._view.show_exit_message()
+                        self._exit_requested = True
+                        return
+
+                    case "help":
+                        self._view.show_help()
+                        self._render_game()
+                        return
+
+                    case _:
+                        # Prova a parsare come coordinate
+                        col, row, orient = self._parse_coords(comando)
+                        if orient:
+                            # Ha orientamento (H/V) -> comando di piazzamento muro
+                            self._model.place_wall((col, row, orient))
+                        else:
+                            # Senza orientamento -> comando di movimento
+                            self._model.move_player((col, row))
+
+                self._render_game()
+
+            except Exception as e:
+                self._handle_error(e)
 
     def _handle_error(self, e: Exception) -> None:
         """Gestisce e visualizza gli errori catturati durante il gioco."""
@@ -56,8 +100,8 @@ class GameController:
             MovementError,
             WallPlacementError,
             WallDepletionError,
-            TurnError,
             InvalidCommandError,
+            TurnError,
         )
         if isinstance(e, valid_errors):
             self._view.show_error(str(e))
@@ -68,10 +112,15 @@ class GameController:
         """Richiede alla vista di renderizzare lo stato attuale del gioco."""
         self._view.render(self._model.get_game_state())
 
+    def _reset_game(self) -> None:
+        """Resetta il gioco per una nuova partita."""
+        self._model.reset()
+
     def start_game(self) -> None:
-        """Avvia il ciclo principale di gioco interattivo."""
+        """Ciclo principale di gioco interattivo."""
+        self._view.show_initial_message()
         self._render_game()
-        while not self._model.check_victory():
+        while not self._model.check_victory() and not self._exit_requested:
             user_input = self._view.get_input()
             if not user_input:
                 continue
@@ -82,3 +131,11 @@ class GameController:
                 if self._model.check_victory():
                     break
                 continue
+
+        if self._exit_requested:
+            return
+
+        if self._model.check_victory():
+            game_state = self._model.get_game_state()
+            winner_id = game_state["winner"]
+            self._view.show_victory(winner_id)

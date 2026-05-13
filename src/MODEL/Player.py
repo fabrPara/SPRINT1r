@@ -1,4 +1,5 @@
 from .Cell import Cell
+from .Exception import WallDepletionError
 
 
 class Player:
@@ -21,3 +22,21 @@ class Player:
         self._position = start_pos
         self._walls_count = 10  # Numero standard di muri in Quoridor
         self._target_row = target_row
+
+    def get_walls_count(self) -> int:
+        """Ritorna il numero di muri rimanenti del giocatore."""
+        return self._walls_count
+
+    def use_wall(self) -> None:
+        """Scala un muro dalla riserva del giocatore."""
+        if self._walls_count <= 0:
+            raise WallDepletionError("Non hai più muri a disposizione!")
+        self._walls_count -= 1
+
+    def get_position(self) -> "Cell":
+        """Restituisce la posizione corrente del giocatore."""
+        return self._position
+
+    def set_position(self, new_position: "Cell") -> None:
+        """Aggiorna la posizione corrente del giocatore."""
+        self._position = new_position

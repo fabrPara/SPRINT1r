@@ -73,10 +73,10 @@ class QuoridorGame:
             if (
                 dy != 0
                 and w_orient == "h"
-                and wy == max(curr_y, target_y)
+                and wy in (curr_y, target_y)
                 and (wx == curr_x or wx == curr_x - 1)
             ):
-                raise MovementError("Un muro orizzontale blocca il passaggio.")
+                raise MovementError("Un muro orizzontale blocca la strada")
 
             # Movimento Orizzontale (dx != 0)
             # Un muro V in (wx, wy) blocca il passaggio tra x e x-1
@@ -84,10 +84,10 @@ class QuoridorGame:
             if (
                 dx != 0
                 and w_orient == "v"
-                and wx == max(curr_x, target_x)
-                and (wy == curr_y or wy == curr_y + 1)
+                and wx in (curr_x, target_x)
+                and (wy == curr_y or wy == curr_y - 1)
             ):
-                raise MovementError("Un muro verticale blocca il passaggio.")
+                raise MovementError("Un muro verticale blocca la strada")
 
         current_player.set_position(Cell(target_x, target_y))
         self.switch_turn()
@@ -150,3 +150,17 @@ class QuoridorGame:
 
         self._winner = 2 if self._current_turn == 1 else 1
         return self._winner
+
+    def reset(self) -> None:
+        """Resetta il gioco per una nuova partita."""
+        self._board = Board()
+
+        p1_start = Cell(5, 1)
+        p2_start = Cell(5, 9)
+
+        p1 = Player(player_id=1, start_pos=p1_start, target_row=9)
+        p2 = Player(player_id=2, start_pos=p2_start, target_row=1)
+
+        self._players = [p1, p2]
+        self._current_turn = 1
+        self._winner = None

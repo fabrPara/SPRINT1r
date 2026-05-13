@@ -70,13 +70,7 @@ class Board:
                     raise WallPlacementError(msg)
                 raise WallPlacementError("Il muro esce dai confini della plancia.")
         elif orientation == "v":
-            if nx < 2 or nx > 9 or ny < 3 or ny > 9:
-                if ny == 2:
-                    msg = (
-                        "Il muro che si vuole posizionare "
-                        "esce parzialmente dalla scacchiera"
-                    )
-                    raise WallPlacementError(msg)
+            if nx < 1 or nx > 9 or ny < 2 or ny > 9:
                 raise WallPlacementError("Il muro esce dai confini della plancia.")
         else:
             raise WallPlacementError("Orientamento muro non valido.")
@@ -130,3 +124,7 @@ class Board:
                         "esistente in quella posizione."
                     )
                     raise WallPlacementError(msg)
+
+                # Controllo incrocio (stessa posizione, orientamenti diversi)
+                if nx == wx and ny == wy:
+                    raise WallPlacementError("I muri non possono incrociarsi.")

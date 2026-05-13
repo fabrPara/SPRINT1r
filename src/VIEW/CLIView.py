@@ -143,3 +143,92 @@ class CLIView(BaseView):
         )
         self._console.print("\n")
         self._console.print(victory_message)
+
+    def show_exit(self, winner_id: int) -> None:
+        """Mostra il messaggio di uscita dalla partita e il vincitore."""
+        self._console.print(
+            "\n[bold yellow]Hai abbandonato la partita. "
+            f"Di conseguenza il giocatore P{winner_id} ha vinto![/bold yellow]"
+        )
+
+    def show_exit_message(self) -> None:
+        """Mostra il messaggio quando l'utente esce dal gioco."""
+        exit_message = Panel(
+            "[bold cyan]Hai scelto di uscire dal gioco.\nAlla prossima![/bold cyan]",
+            style="bold cyan",
+            expand=False,
+        )
+        self._console.print("\n")
+        self._console.print(exit_message)
+
+    def show_initial_message(self) -> None:
+        """Mostra il messaggio iniziale con istruzioni."""
+        self._console.print("\n")
+        self._console.print(
+            '[bold cyan]Digita "help" per visualizzare le regole del gioco '
+            "e i comandi per muoverti e piazzare i muri.[/bold cyan]"
+        )
+        self._console.print(
+            '[bold cyan]Digita "exit" per uscire dal gioco.[/bold cyan]'
+        )
+        self._console.print("\n")
+
+    def show_help(self) -> None:
+        """Mostra l'help con le regole e i comandi del gioco."""
+        self._console.clear()
+        help_panel = Panel(
+            """[bold cyan]REGOLE DEL GIOCO QUORIDOR[/bold cyan]
+
+[bold yellow]OBIETTIVO[/bold yellow]
+Raggiungi il lato opposto della scacchiera prima del tuo avversario.
+Il giocatore 1 deve raggiungere la riga 9, il giocatore 2 la riga 1.
+
+[bold yellow]MOVIMENTO[/bold yellow]
+Muoviti di una sola cella alla volta verso qualsiasi direzione (su, giù,
+sinistra, destra). Non puoi muoverti dove c'è un altro giocatore o attraverso
+un muro.
+
+[bold yellow]MURI[/bold yellow]
+Possiedi 10 muri per il resto della partita. Usa i muri per bloccare l'avversario.
+I muri possono essere piazzati orizzontalmente o verticalmente e occupano due celle.
+Non puoi piazzare:
+  • Muri fuori dalla scacchiera
+  • Muri sovrapposti
+  • Muri che formano una croce
+
+[bold yellow]COMANDI[/bold yellow]
+[bold green]<cella>[/bold green]             Muovi il pedone. Es: e5 oppure E5
+
+[bold green]<cella>h[/bold green]            Piazza un muro orizzontale.
+                      Es: e5h oppure E5H
+
+[bold green]<cella>v[/bold green]            Piazza un muro verticale.
+                      Es: e5v oppure E5V
+
+[bold green]abbandona[/bold green]            Abbandona la partita.
+[bold green]exit[/bold green]                 Esci dal gioco.
+[bold green]help[/bold green]                 Mostra questo messaggio.
+
+[bold yellow]COORDINATE[/bold yellow]
+Le colonne sono indicate con lettere (a-i), le righe con numeri (1-9).
+I comandi sono case-insensitive (funzionano con maiuscole e minuscole).
+Esempio: a1 è l'angolo in alto a sinistra, i9 è l'angolo in basso a destra.""",
+            style="bold blue",
+            expand=False,
+        )
+        self._console.print(help_panel)
+        self._console.input(
+            "\n[bold magenta]Premi Invio per tornare al gioco > [/bold magenta]"
+        )
+
+    def prompt_new_game(self) -> str:
+        """Chiede all'utente se vuole iniziare una nuova partita."""
+        response = (
+            self._console.input(
+                "\n[bold yellow]Desideri iniziarne un'altra? (Si = s, No = n) > "
+                "[/bold yellow]"
+            )
+            .strip()
+            .lower()
+        )
+        return response

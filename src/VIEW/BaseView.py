@@ -25,3 +25,19 @@ class BaseView(ABC):
     @abstractmethod
     def get_input(self) -> str:
         pass
+
+    @abstractmethod
+    def show_initial_message(self) -> None:
+        pass
+
+    @abstractmethod
+    def show_help(self) -> None:
+        pass
+
+    @abstractmethod
+    def show_exit_message(self) -> None:
+        pass
+
+    @abstractmethod
+    def prompt_new_game(self) -> str:
+        pass

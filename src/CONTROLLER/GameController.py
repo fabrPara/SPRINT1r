@@ -124,8 +124,19 @@ class GameController:
             user_input = self._view.get_input()
             if not user_input:
                 continue
+
+            args = shlex.split(user_input)
+            if not args:
+                continue
+
+            if args[0].lower() in {"wall", "move"}:
+                self._view.show_error(
+                    "Hai sbagliato comando. Usa solo coordinate come 'e3h' o 'e3' "
+                    f"senza il prefisso '{args[0].lower()}'."
+                )
+                continue
+
             try:
-                args = shlex.split(user_input)
                 self._app(args)
             except SystemExit:
                 if self._model.check_victory():

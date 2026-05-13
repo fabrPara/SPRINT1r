@@ -1,6 +1,6 @@
 from .Board import Board
 from .Cell import Cell
-from .Exception import InvalidCommandError, MovementError, TurnError, WallPlacementError
+from .Exception import InvalidCommandError, MovementError, TurnError
 from .Player import Player
 from .Wall import Wall
 

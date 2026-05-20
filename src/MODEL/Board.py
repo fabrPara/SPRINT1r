@@ -70,7 +70,6 @@ class Board:
                     raise WallPlacementError(msg)
                 raise WallPlacementError("Il muro esce dai confini della plancia.")
         elif orientation == "v":
-            # ny < 2 non è valido perché la parte alta del muro uscirebbe a riga 0
             if nx < 2 or nx > 9 or ny < 2 or ny > 9:
                 if ny == 1:
                     msg = (
@@ -88,13 +87,13 @@ class Board:
             wy = w.get_start_cell().y
             w_orientation = w.get_orientation().lower()
 
-            # Sovrapposizione esatta (stesse coordinate e stesso orientamento)
+            # Sovrapposizione esatta
             if nx == wx and ny == wy and orientation == w_orientation:
                 raise WallPlacementError(
                     "C'è già un muro esattamente in questa posizione."
                 )
 
-            # Sovrapposizione parziale con muro dello stesso orientamento
+            # Sovrapposizione parziale (stesso orientamento)
             if orientation == w_orientation:
                 if orientation == "h" and ny == wy and abs(nx - wx) == 1:
                     raise WallPlacementError(
@@ -107,24 +106,7 @@ class Board:
                         "verticale esistente"
                     )
 
-            # Controllo incrocio a croce perfetto (condividono lo stesso centro)
-            if orientation != w_orientation:
-                if (
-                    orientation == "h"
-                    and w_orientation == "v"
-                    and nx + 1 == wx
-                    and ny == wy + 1
-                ):
-                    raise WallPlacementError("I muri non possono incrociarsi a croce.")
-                if (
-                    orientation == "v"
-                    and w_orientation == "h"
-                    and nx == wx + 1
-                    and ny + 1 == wy
-                ):
-                    raise WallPlacementError("I muri non possono incrociarsi a croce.")
-
-            # Controllo sovrapposizioni parziali ad angolo / a T tra H e V
+            # Intersezione a croce perfetta (condividono lo stesso centro)
             if orientation != w_orientation:
                 if (
                     orientation == "h"
@@ -132,19 +114,11 @@ class Board:
                     and nx + 1 == wx
                     and ny == wy
                 ):
-                    msg = (
-                        "Il muro si sovrappone parzialmente a un muro "
-                        "esistente in quella posizione."
-                    )
-                    raise WallPlacementError(msg)
+                    raise WallPlacementError("I muri non possono incrociarsi a croce.")
                 if (
                     orientation == "v"
                     and w_orientation == "h"
                     and nx == wx + 1
                     and ny == wy
                 ):
-                    msg = (
-                        "Il muro si sovrappone parzialmente a un muro "
-                        "esistente in quella posizione."
-                    )
-                    raise WallPlacementError(msg)
+                    raise WallPlacementError("I muri non possono incrociarsi a croce.")

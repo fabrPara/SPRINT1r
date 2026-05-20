@@ -48,7 +48,9 @@ class CLIView(BaseView):
 
         self._console.print(f"Turno di: [bold yellow]P{turno}[/bold yellow]")
         self._console.print(f"Muri P1: {muri_p1} | Muri P2: {muri_p2}")
+    
 
+    
     def _draw_board(self, board_data: dict, player_data: list) -> None:
         """Disegna la board con player ."""
         table = Table(
@@ -123,7 +125,6 @@ class CLIView(BaseView):
             table.add_row(*el_riga)
 
         self._console.print(table)
-        
     def get_input(self) -> str:
         """Richiede un comando testuale all'utente.
 

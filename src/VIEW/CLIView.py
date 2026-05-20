@@ -71,7 +71,7 @@ class CLIView(BaseView):
             c = p.get_coords() if hasattr(p, "get_coords") else p
             return c, w._orientation
 
-        # 1. COORDINATE LETTERE (Allineamento corretto: 4 spazi + lettera + 2 spazi)
+        # 1. COORDINATE LETTERE
         c_let = [" "]
         for char in "abcdefghi":
             c_let.append(f"[bold green]{char}[/bold green]")
@@ -92,6 +92,8 @@ class CLIView(BaseView):
                     )
                     el_h.append(m_h if is_h else "       ")
                     if c_h < 9:
+                        # Intersezione: un incrocio è occupato se c'è un muro H
+                        # o se un muro V passa da lì (attivato a riga o riga+1)
                         v_h = any(
                             o == "v" and c in [(c_h + 1, riga), (c_h + 1, riga + 1)]
                             for c, o in m_list
@@ -102,7 +104,6 @@ class CLIView(BaseView):
 
             el_riga = [f"[bold green]{riga}[/bold green]"]
             for col in range(1, 10):
-                # Rimosse le quadre dai player per evitare che la cella si allarghi
                 if (col, riga) == p1_pos:
                     cella = "[bold magenta][P1] [/bold magenta]"
                 elif (col, riga) == p2_pos:
@@ -112,15 +113,17 @@ class CLIView(BaseView):
                 el_riga.append(cella)
 
                 if col < 9:
+                    # Il muro verticale in col+1 attivato a riga o riga+1
+                    # sale e si estende sulla riga corrente
                     is_v = any(
-                        o == "v" and c in [(col + 1, riga + 1), (col + 1, riga + 2)]
+                        o == "v" and c in [(col + 1, riga), (col + 1, riga + 1)]
                         for c, o in m_list
                     )
                     el_riga.append(m_v if is_v else " ")
             table.add_row(*el_riga)
 
         self._console.print(table)
-
+        
     def get_input(self) -> str:
         """Richiede un comando testuale all'utente.
 

@@ -70,8 +70,9 @@ class Board:
                     raise WallPlacementError(msg)
                 raise WallPlacementError("Il muro esce dai confini della plancia.")
         elif orientation == "v":
-            if nx < 2 or nx > 9 or ny < 3 or ny > 9:
-                if ny == 2:
+            # ny < 2 non è valido perché la parte alta del muro uscirebbe a riga 0
+            if nx < 2 or nx > 9 or ny < 2 or ny > 9:
+                if ny == 1:
                     msg = (
                         "Il muro che si vuole posizionare "
                         "esce parzialmente dalla scacchiera"
@@ -106,25 +107,24 @@ class Board:
                         "verticale esistente"
                     )
 
-            # ⬇️ NUOVO CONTROLLO 1: INCROCIO A CROCE CORRETTO (es. e4h vs f5v) ⬇️
+            # Controllo incrocio a croce perfetto (condividono lo stesso centro)
             if orientation != w_orientation:
                 if (
                     orientation == "h"
                     and w_orientation == "v"
                     and nx + 1 == wx
-                    and ny + 1 == wy
+                    and ny == wy + 1
                 ):
                     raise WallPlacementError("I muri non possono incrociarsi a croce.")
                 if (
                     orientation == "v"
                     and w_orientation == "h"
                     and nx == wx + 1
-                    and ny == wy + 1
+                    and ny + 1 == wy
                 ):
                     raise WallPlacementError("I muri non possono incrociarsi a croce.")
-            # ⬆️ fine nuovo controllo 1 ⬆️
 
-            # Sovrapposizione a croce tra un muro orizzontale e uno verticale
+            # Controllo sovrapposizioni parziali ad angolo / a T tra H e V
             if orientation != w_orientation:
                 if (
                     orientation == "h"

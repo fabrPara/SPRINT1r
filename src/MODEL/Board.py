@@ -1,5 +1,7 @@
 """Modulo per la gestione del tabellone di gioco."""
 
+from src.UTILS import PathFinder
+
 from .Cell import Cell
 from .Exception import WallPlacementError
 from .Wall import Wall
@@ -36,24 +38,26 @@ class Board:
         """Ritorna la lista dei muri attualmente posizionati sulla board."""
         return self._walls
 
-    def add_wall(self, wall: Wall) -> None:
+    def add_wall(self, wall: Wall, players: list) -> None:
         """Valida e aggiunge un muro alla plancia.
 
         Args:
             wall (Wall): Il muro orizzontale da aggiungere.
+            players (list): La lista dei giocatori.
 
         Raises:
             WallPlacementError: Se il posizionamento viola le regole.
 
         """
-        self._validate_wall(wall)
+        self._validate_wall(wall, players)
         self._walls.append(wall)
 
-    def _validate_wall(self, new_wall: Wall) -> None:
+    def _validate_wall(self, new_wall: Wall, players: list) -> None:
         """Controlla le collisioni e i confini fisici per tutti i muri.
 
         Args:
             new_wall (Wall): L'oggetto Wall da validare.
+            players (list): La lista dei giocatori.
 
         """
         nx = new_wall.get_start_cell().x
@@ -106,7 +110,7 @@ class Board:
                         "verticale esistente"
                     )
 
-            # Intersezione a croce perfetta (condividono lo stesso centro)
+            # Intersezione a croce perfetta (Risolto errore E501 di Ruff)
             if orientation != w_orientation:
                 if (
                     orientation == "h"
@@ -114,11 +118,58 @@ class Board:
                     and nx + 1 == wx
                     and ny == wy
                 ):
-                    raise WallPlacementError("I muri non possono incrociarsi a croce.")
+                    raise WallPlacementError("I muri non possono incrociarsi.")
                 if (
                     orientation == "v"
                     and w_orientation == "h"
                     and nx == wx + 1
                     and ny == wy
                 ):
-                    raise WallPlacementError("I muri non possono incrociarsi a croce.")
+                    raise WallPlacementError("I muri non possono incrociarsi.")
+
+            # Controllo sovrapposizioni parziali ad angolo / a T tra H e V
+            if orientation != w_orientation:
+                if (
+                    orientation == "h"
+                    and w_orientation == "v"
+                    and nx + 1 == wx
+                    and ny == wy + 1
+                ):
+                    msg = (
+                        "Il muro si sovrappone parzialmente a un muro "
+                        "esistente in quella posizione."
+                    )
+                    raise WallPlacementError(msg)
+                if (
+                    orientation == "v"
+                    and w_orientation == "h"
+                    and nx == wx + 1
+                    and ny == wy - 1
+                ):
+                    msg = (
+                        "Il muro si sovrappone parzialmente a un muro "
+                        "esistente in quella posizione."
+                    )
+                    raise WallPlacementError(msg)
+
+        # 3. Controllo algoritmico BFS (Nessun giocatore deve essere isolato)
+        simulated_walls = list(self._walls) + [new_wall]
+        p1, p2 = players[0], players[1]
+        p1_coords = p1.get_position().get_coords()
+        p2_coords = p2.get_position().get_coords()
+
+        # Verifica per P1
+        if not PathFinder.has_path(
+            p1_coords, p2_coords, p1.get_target_row(), simulated_walls
+        ):
+            raise WallPlacementError(
+                "Mossa illegale: interrompe l'ultimo percorso di P1."
+            )
+
+        # Verifica per P2
+        if not PathFinder.has_path(
+            p2_coords, p1_coords, p2.get_target_row(), simulated_walls
+        ):
+            raise WallPlacementError(
+                "Mossa illegale: interrompe l'ultimo percorso di P2."
+            )

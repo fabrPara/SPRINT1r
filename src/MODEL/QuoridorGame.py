@@ -102,8 +102,39 @@ class QuoridorGame:
         }
 
     def check_victory(self) -> bool:
-        pass
+        """Controlla se uno dei giocatori ha raggiunto la vittoria."""
+        for player in self._players:
+            current_pos = player.get_position().get_coords()
+            current_row = current_pos[1]
 
+            if current_row == player._target_row:
+                self._winner = player._id
+                return True
+
+        return False
+
+    def resign_current_player(self) -> int:
+        """Riconosce la resa del giocatore di turno e restituisce il vincitore."""
+        if self._winner is not None:
+            return self._winner
+
+        self._winner = 2 if self._current_turn == 1 else 1
+        return self._winner
+
+    def reset(self) -> None:
+        """Resetta il gioco per una nuova partita."""
+        self._board = Board()
+
+        p1_start = Cell(5, 1)
+        p2_start = Cell(5, 9)
+
+        p1 = Player(player_id=1, start_pos=p1_start, target_row=9)
+        p2 = Player(player_id=2, start_pos=p2_start, target_row=1)
+
+        self._players = [p1, p2]
+        self._current_turn = 1
+        self._winner = None
+    
     def place_wall(self, coords: tuple[int, int, str]) -> None:
         """Piazza un muro per il giocatore corrente."""
         if self._winner is not None:

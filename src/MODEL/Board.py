@@ -1,6 +1,6 @@
 """Modulo per la gestione del tabellone di gioco."""
 
-from src.UTILS import PathFinder
+from src.UTILS.PathFinder import PathFinder
 
 from .Cell import Cell
 from .Exception import WallPlacementError
@@ -160,7 +160,7 @@ class Board:
 
         # Verifica per P1
         if not PathFinder.has_path(
-            p1_coords, p2_coords, p1.get_target_row(), simulated_walls
+            p1_coords, p2_coords, p1._target_row, simulated_walls
         ):
             raise WallPlacementError(
                 "Mossa illegale: interrompe l'ultimo percorso di P1."
@@ -168,7 +168,7 @@ class Board:
 
         # Verifica per P2
         if not PathFinder.has_path(
-            p2_coords, p1_coords, p2.get_target_row(), simulated_walls
+            p2_coords, p1_coords, p2._target_row, simulated_walls
         ):
             raise WallPlacementError(
                 "Mossa illegale: interrompe l'ultimo percorso di P2."

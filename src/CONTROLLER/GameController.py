@@ -79,6 +79,18 @@ class GameController:
                         self._render_game()
                         return
 
+                    case "patta":
+                        game_state = self._model.get_game_state()
+                        current_player_id = game_state["current_player_id"]
+                        opponent_id = 2 if current_player_id == 1 else 1
+                        response = self._view.prompt_draw_answer(opponent_id)
+                        if response == "s":
+                            self._model.declare_draw()
+                        else:
+                            self._view.show_draw_declined()
+                        self._render_game()
+                        return
+
                     case _:
                         # Prova a parsare come coordinate
                         col, row, orient = self._parse_coords(comando)
@@ -120,7 +132,7 @@ class GameController:
         """Ciclo principale di gioco interattivo."""
         self._view.show_initial_message()
         self._render_game()
-        while not self._model.check_victory() and not self._exit_requested:
+        while not self._model.is_over() and not self._exit_requested:
             user_input = self._view.get_input()
             if not user_input:
                 continue
@@ -150,3 +162,5 @@ class GameController:
             game_state = self._model.get_game_state()
             winner_id = game_state["winner"]
             self._view.show_victory(winner_id)
+        elif self._model.is_draw():
+            self._view.show_draw()

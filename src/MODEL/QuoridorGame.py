@@ -25,6 +25,7 @@ class QuoridorGame:
         self._players = [p1, p2]
         self._current_turn = 1
         self._winner = None
+        self._draw = False
 
     def switch_turn(self):
         """Cambia il turno passando al giocatore successivo."""
@@ -99,6 +100,7 @@ class QuoridorGame:
             "players": self._players,
             "current_player_id": self._current_turn,
             "winner": self._winner,
+            "is_draw": self._draw,
         }
 
     def check_victory(self) -> bool:
@@ -112,6 +114,20 @@ class QuoridorGame:
                 return True
 
         return False
+
+    def is_draw(self) -> bool:
+        """Ritorna True se la partita è terminata in pareggio."""
+        return self._draw
+
+    def is_over(self) -> bool:
+        """Ritorna True se la partita è terminata per vittoria o patta."""
+        return self._winner is not None or self._draw
+
+    def declare_draw(self) -> None:
+        """Dichiara la partita come patta."""
+        if self._winner is not None:
+            raise TurnError("La partita è già finita.")
+        self._draw = True
 
     def resign_current_player(self) -> int:
         """Riconosce la resa del giocatore di turno e restituisce il vincitore."""
@@ -134,6 +150,7 @@ class QuoridorGame:
         self._players = [p1, p2]
         self._current_turn = 1
         self._winner = None
+        self._draw = False
     
     def place_wall(self, coords: tuple[int, int, str]) -> None:
         """Piazza un muro per il giocatore corrente."""

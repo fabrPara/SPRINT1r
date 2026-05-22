@@ -19,5 +19,17 @@ class BaseView(ABC):
         pass
 
     @abstractmethod
+    def show_draw(self) -> None:
+        pass
+
+    @abstractmethod
+    def show_draw_declined(self) -> None:
+        pass
+
+    @abstractmethod
+    def prompt_draw_answer(self, opponent_id: int) -> str:
+        pass
+
+    @abstractmethod
     def get_input(self) -> str:
         pass

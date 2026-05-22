@@ -137,6 +137,20 @@ class CLIView(BaseView):
         )
         return comando.strip().lower()
 
+    def prompt_draw_answer(self, opponent_id: int) -> str:
+        """Chiede all'avversario se accetta la proposta di patta."""
+        while True:
+            risposta = self._console.input(
+                f"[bold yellow]Giocatore P{opponent_id}, accetti la patta? "
+                "(Si = s, No = n) > "
+            ).strip().lower()
+            if risposta in {"s", "n"}:
+                return risposta
+            self._console.print(
+                "[bold red]Risposta non valida. Inserisci 's' per sì "
+                "o 'n' per no.[/bold red]"
+            )
+
     def show_error(self, message: str) -> None:
         """Mostra messaggi di errore."""
         self._console.print("-" * 20)
@@ -152,6 +166,23 @@ class CLIView(BaseView):
         )
         self._console.print("\n")
         self._console.print(victory_message)
+
+    def show_draw(self) -> None:
+        """Mostra il messaggio finale di patta."""
+        draw_message = Panel(
+            "[bold yellow]🔷 Partita terminata in patta! 🔷[/bold yellow]",
+            style="bold yellow",
+            expand=False,
+        )
+        self._console.print("\n")
+        self._console.print(draw_message)
+
+    def show_draw_declined(self) -> None:
+        """Mostra il messaggio quando l'offerta di patta viene rifiutata."""
+        self._console.print(
+            "\n[bold red]La proposta di patta è stata rifiutata. "
+            "Il gioco continua.[/bold red]"
+        )
 
     def show_exit(self, winner_id: int) -> None:
         """Mostra il messaggio di uscita dalla partita e il vincitore."""
@@ -215,6 +246,7 @@ Non puoi piazzare:
                       Es: e5v oppure E5V
 
 [bold green]abbandona[/bold green]            Abbandona la partita.
+[bold green]patta[/bold green]                Proponi la patta all'avversario.
 [bold green]exit[/bold green]                 Esci dal gioco.
 [bold green]help[/bold green]                 Mostra questo messaggio.
 

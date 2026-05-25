@@ -51,87 +51,104 @@ class QuoridorGame:
         dx = target_x - curr_x
         dy = target_y - curr_y
 
-        # --- CONTROLLO SALTO: Se un giocatore è davanti, permetti il salto ---
-        opponent_in_target = any(
-            player.get_position().get_coords() == (target_x, target_y)
-            for player in self._players
-        )
+        opponent = self._players[1] if self._current_turn == 1 else self._players[0]
+        opp_x, opp_y = opponent.get_position().get_coords()
+        opp_dx = opp_x - curr_x
+        opp_dy = opp_y - curr_y
+        opponent_adjacent = abs(opp_dx) + abs(opp_dy) == 1
 
-        if opponent_in_target:
-            # Il movimento deve essere di una cella verso l'avversario
-            if not ((abs(dx) == 1 and dy == 0) or (dx == 0 and abs(dy) == 1)):
-                raise MovementError(
-                    "Movimento non valido: puoi muoverti solo di una cella."
-                )
-            
-            # Calcola la cella di salto (due caselle nella stessa direzione)
-            jump_x = curr_x + (2 * (1 if dx > 0 else -1 if dx < 0 else 0))
-            jump_y = curr_y + (2 * (1 if dy > 0 else -1 if dy < 0 else 0))
-            
-            # Controlla se la cella di salto è entro i confini
-            if not (1 <= jump_x <= 9 and 1 <= jump_y <= 9):
-                raise MovementError(
-                    "Salto non permesso: cella di salto fuori dai confini."
-                )
-            
-            # Controlla se la cella di salto è occupata
-            for player in self._players:
-                p_pos = player.get_position().get_coords()
-                if jump_x == p_pos[0] and jump_y == p_pos[1]:
-                    raise MovementError(
-                        "Salto non permesso: cella occupata."
-                    )
-            
-            # Controlla muri che bloccano il salto
+        def is_within_bounds(x: int, y: int) -> bool:
+            return 1 <= x <= 9 and 1 <= y <= 9
+
+        def is_cell_occupied(x: int, y: int) -> bool:
+            return any(
+                player.get_position().get_coords() == (x, y)
+                for player in self._players
+            )
+
+        def segment_blocked(x1: int, y1: int, x2: int, y2: int) -> bool:
+            move_dx = x2 - x1
+            move_dy = y2 - y1
             for wall in self._board.get_walls():
                 wx, wy = wall.get_start_cell().get_coords()
                 w_orient = wall.get_orientation().lower()
-                
-                # Salto verticale (dy != 0)
-                if dy != 0 and w_orient == "h":
-                    # Controlla muro tra giocatore attuale e avversario
-                    wall_blocks_first = (
-                        wy == max(curr_y, target_y)
-                        and (wx == curr_x or wx == curr_x - 1)
+                if (
+                    move_dx == 0
+                    and abs(move_dy) == 1
+                    and w_orient == "h"
+                    and wy == max(y1, y2)
+                    and (wx == x1 or wx == x1 - 1)
+                ):
+                    return True
+                if (
+                    move_dy == 0
+                    and abs(move_dx) == 1
+                    and w_orient == "v"
+                    and wx == max(x1, x2)
+                    and (wy == y1 or wy == y1 + 1)
+                ):
+                    return True
+            return False
+
+        direct_jump_x = curr_x + 2 * opp_dx
+        direct_jump_y = curr_y + 2 * opp_dy
+        direct_target = (direct_jump_x, direct_jump_y)
+        diagonal_targets = []
+        pivot_blocked = segment_blocked(curr_x, curr_y, opp_x, opp_y)
+
+        if opponent_adjacent:
+            if (target_x, target_y) == (opp_x, opp_y):
+                raise MovementError("Movimento non valido: cella occupata.")
+
+            if (target_x, target_y) == direct_target:
+                if (
+                    pivot_blocked
+                    or not is_within_bounds(direct_jump_x, direct_jump_y)
+                    or is_cell_occupied(direct_jump_x, direct_jump_y)
+                    or segment_blocked(opp_x, opp_y, direct_jump_x, direct_jump_y)
+                ):
+                    raise MovementError(
+                        "Salto non permesso: muro blocca il passaggio."
                     )
-                    if wall_blocks_first:
-                        raise MovementError(
-                            "Salto non permesso: muro blocca il passaggio."
-                        )
-                    # Controlla muro tra avversario e cella di salto
-                    wall_blocks_second = (
-                        wy == max(target_y, jump_y)
-                        and (wx == target_x or wx == target_x - 1)
+                current_player.set_position(Cell(direct_jump_x, direct_jump_y))
+                self.switch_turn()
+                return
+
+            if opp_dx == 0:
+                diagonal_targets = [
+                    (opp_x - 1, opp_y),
+                    (opp_x + 1, opp_y),
+                ]
+            else:
+                diagonal_targets = [
+                    (opp_x, opp_y - 1),
+                    (opp_x, opp_y + 1),
+                ]
+
+            if pivot_blocked and (target_x, target_y) in diagonal_targets:
+                raise MovementError(
+                    "Salto non permesso: muro blocca il passaggio."
+                )
+
+            if (target_x, target_y) in diagonal_targets:
+                direct_blocked = (
+                    not is_within_bounds(direct_jump_x, direct_jump_y)
+                    or is_cell_occupied(direct_jump_x, direct_jump_y)
+                    or segment_blocked(opp_x, opp_y, direct_jump_x, direct_jump_y)
+                )
+                if not direct_blocked:
+                    raise MovementError(
+                        "Movimento non valido: puoi muoverti solo di una cella."
                     )
-                    if wall_blocks_second:
-                        raise MovementError(
-                            "Salto non permesso: muro blocca il passaggio."
-                        )
-                
-                # Salto orizzontale (dx != 0)
-                if dx != 0 and w_orient == "v":
-                    # Controlla muro tra giocatore attuale e avversario
-                    wall_blocks_first = (
-                        wx == max(curr_x, target_x)
-                        and (wy == curr_y or wy == curr_y + 1)
+                if is_cell_occupied(target_x, target_y):
+                    raise MovementError("Movimento non valido: cella occupata.")
+                if segment_blocked(opp_x, opp_y, target_x, target_y):
+                    raise MovementError(
+                        "Salto non permesso: muro blocca il passaggio."
                     )
-                    if wall_blocks_first:
-                        raise MovementError(
-                            "Salto non permesso: muro blocca il passaggio."
-                        )
-                    # Controlla muro tra avversario e cella di salto
-                    wall_blocks_second = (
-                        wx == max(target_x, jump_x)
-                        and (wy == target_y or wy == target_y + 1)
-                    )
-                    if wall_blocks_second:
-                        raise MovementError(
-                            "Salto non permesso: muro blocca il passaggio."
-                        )
-            
-            current_player.set_position(Cell(jump_x, jump_y))
-            self.switch_turn()
-            return
+                current_player.set_position(Cell(target_x, target_y))
+                self.switch_turn()
+                return
 
         if not ((abs(dx) == 1 and dy == 0) or (dx == 0 and abs(dy) == 1)):
             raise MovementError(

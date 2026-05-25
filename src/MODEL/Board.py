@@ -1,5 +1,7 @@
 """Modulo per la gestione del tabellone di gioco."""
 
+from src.UTILS.PathFinder import PathFinder
+
 from .Cell import Cell
 from .Exception import WallPlacementError
 from .Wall import Wall
@@ -36,24 +38,26 @@ class Board:
         """Ritorna la lista dei muri attualmente posizionati sulla board."""
         return self._walls
 
-    def add_wall(self, wall: Wall) -> None:
+    def add_wall(self, wall: Wall, players: list) -> None:
         """Valida e aggiunge un muro alla plancia.
 
         Args:
             wall (Wall): Il muro orizzontale da aggiungere.
+            players (list): La lista dei giocatori.
 
         Raises:
             WallPlacementError: Se il posizionamento viola le regole.
 
         """
-        self._validate_wall(wall)
+        self._validate_wall(wall, players)
         self._walls.append(wall)
 
-    def _validate_wall(self, new_wall: Wall) -> None:
+    def _validate_wall(self, new_wall: Wall, players: list) -> None:
         """Controlla le collisioni e i confini fisici per tutti i muri.
 
         Args:
             new_wall (Wall): L'oggetto Wall da validare.
+            players (list): La lista dei giocatori.
 
         """
         nx = new_wall.get_start_cell().x
@@ -81,7 +85,7 @@ class Board:
         else:
             raise WallPlacementError("Orientamento muro non valido.")
 
-        # 2. Controllo sovrapposizioni con muri esistenti
+        # 2. Controllo sovrapposizioni con muri esistenti (TUA LOGICA ORIGINALE)
         for w in self._walls:
             wx = w.get_start_cell().x
             wy = w.get_start_cell().y
@@ -122,3 +126,25 @@ class Board:
                     and ny == wy
                 ):
                     raise WallPlacementError("I muri non possono incrociarsi a croce.")
+
+        # 3. Controllo algoritmico BFS (Piazzato FUORI dal ciclo for)
+        simulated_walls = list(self._walls) + [new_wall]
+        p1, p2 = players[0], players[1]
+        p1_coords = p1.get_position().get_coords()
+        p2_coords = p2.get_position().get_coords()
+
+        # Verifica per P1
+        if not PathFinder.has_path(
+            p1_coords, p2_coords, p1._target_row, simulated_walls
+        ):
+            raise WallPlacementError(
+                "Mossa illegale: interrompe l'ultimo percorso di P1."
+            )
+
+        # Verifica per P2
+        if not PathFinder.has_path(
+            p2_coords, p1_coords, p2._target_row, simulated_walls
+        ):
+            raise WallPlacementError(
+                "Mossa illegale: interrompe l'ultimo percorso di P2."
+            )

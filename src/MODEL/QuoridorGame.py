@@ -243,7 +243,7 @@ class QuoridorGame:
         new_wall = Wall(start_cell=start_cell, orientation=coords[2])
 
         try:
-            self._board.add_wall(new_wall)
+            self._board.add_wall(new_wall,self._players)
         except Exception as e:
             current_player._walls_count += 1
             raise e

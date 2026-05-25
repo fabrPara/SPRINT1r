@@ -34,20 +34,25 @@ class CLIView(BaseView):
         self._draw_board(board_data, player_data)
 
     def _draw_stats(self, players_data: dict):
-        """Stampa le statistiche della partita come il turno attuale e i muri rimanenti.
-
-        Args:
-            players_data (dict): _description_
-
-        """
+        """Stampa le statistiche della partita inclusi i tempi rimanenti."""
         self._console.print("\n[bold cyan]--- QUORIDOR - SPRINT 1 ---[/bold cyan]")
 
         turno = players_data.get("current_player_id", [])
         muri_p1 = players_data.get("players", [])[0]._walls_count
         muri_p2 = players_data.get("players", [])[1]._walls_count
+        
+        # Recupera i tempi dall'orologio scacchistico (default 3 minuti)
+        clocks = players_data.get("clocks", {1: 180.0, 2: 180.0})
+
+        # Formatta i secondi residui in Minuti e Secondi
+        t_p1 = f"{int(clocks[1] // 60)}m {int(clocks[1] % 60)}s"
+        t_p2 = f"{int(clocks[2] // 60)}m {int(clocks[2] % 60)}s"
 
         self._console.print(f"Turno di: [bold yellow]P{turno}[/bold yellow]")
-        self._console.print(f"Muri P1: {muri_p1} | Muri P2: {muri_p2}")
+        self._console.print(
+            f"Muri P1: {muri_p1} ([clock] Tempo: {t_p1}) | "
+            f"Muri P2: {muri_p2} ([clock] Tempo: {t_p2})"
+        )
     
 
     
@@ -230,6 +235,12 @@ Esempio: a1 è l'angolo in alto a sinistra, i9 è l'angolo in basso a destra."""
             "\n[bold magenta]Premi Invio per tornare al gioco > [/bold magenta]"
         )
 
+    def show_timeout(self, player_id: int) -> None:
+        """Mostra il messaggio di tempo scaduto per il giocatore corrente."""
+        self._console.print(
+            f"\n[bold red]⌛ Tempo Scaduto! Il Giocatore P{player_id} "
+            "ha esaurito i suoi 3 minuti.[/bold red]"
+        )
     def prompt_new_game(self) -> str:
         """Chiede all'utente se vuole iniziare una nuova partita."""
         response = (

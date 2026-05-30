@@ -35,25 +35,33 @@ class CLIView(BaseView):
 
     def _draw_stats(self, players_data: dict):
         """Stampa le statistiche della partita inclusi i tempi rimanenti."""
-        self._console.print("\n[bold cyan]--- QUORIDOR - SPRINT 1 ---[/bold cyan]")
+        self._console.print(
+            "\n[bold cyan]--- QUORIDOR - SPRINT 1 ---[/bold cyan]"
+        )
 
         turno = players_data.get("current_player_id", [])
         muri_p1 = players_data.get("players", [])[0]._walls_count
         muri_p2 = players_data.get("players", [])[1]._walls_count
         
-        # Recupera i tempi dall'orologio scacchistico (default 3 minuti)
+        # Recupera i tempi dall'orologio scacchistico
         clocks = players_data.get("clocks", {1: 180.0, 2: 180.0})
 
-        # Formatta i secondi residui in Minuti e Secondi
-        t_p1 = f"{int(clocks[1] // 60)}m {int(clocks[1] % 60)}s"
-        t_p2 = f"{int(clocks[2] // 60)}m {int(clocks[2] % 60)}s"
+        # Formatta il tempo: se supera i 3600 secondi (1 ora), è una partita classica
+        if clocks[1] >= 3600.0 or clocks[2] >= 3600.0:
+            t_p1 = "∞"
+            t_p2 = "∞"
+        else:
+            # Formatta i secondi residui in Minuti e Secondi per la modalità Blitz
+            t_p1 = f"{int(clocks[1] // 60)}m {int(clocks[1] % 60)}s"
+            t_p2 = f"{int(clocks[2] // 60)}m {int(clocks[2] % 60)}s"
 
-        self._console.print(f"Turno di: [bold yellow]P{turno}[/bold yellow]")
+        self._console.print(
+            f"Turno di: [bold yellow]P{turno}[/bold yellow]"
+        )
         self._console.print(
             f"Muri P1: {muri_p1} ([clock] Tempo: {t_p1}) | "
             f"Muri P2: {muri_p2} ([clock] Tempo: {t_p2})"
         )
-    
 
     
     def _draw_board(self, board_data: dict, player_data: list) -> None:
@@ -239,7 +247,7 @@ Esempio: a1 è l'angolo in alto a sinistra, i9 è l'angolo in basso a destra."""
         """Mostra il messaggio di tempo scaduto per il giocatore corrente."""
         self._console.print(
             f"\n[bold red]⌛ Tempo Scaduto! Il Giocatore P{player_id} "
-            "ha esaurito i suoi 3 minuti.[/bold red]"
+            "ha esaurito i suoi minuti.[/bold red]"
         )
     def prompt_new_game(self) -> str:
         """Chiede all'utente se vuole iniziare una nuova partita."""
@@ -252,3 +260,63 @@ Esempio: a1 è l'angolo in alto a sinistra, i9 è l'angolo in basso a destra."""
             .lower()
         )
         return response
+    
+    def prompt_game_settings(self) -> tuple[bool, float]:
+        """Mostra il menu di configurazione della partita.
+
+        Returns:
+            tuple[bool, float]: (usa_tempo, secondi_totali)
+
+        """
+        self._console.clear()
+        
+        menu_text = (
+            "[bold cyan]⚙️  IMPOSTAZIONI NUOVA PARTITA ⚙️[/bold cyan]\n\n"
+            "Scegli la modalità di gioco:\n"
+            "[bold green]1.[/bold green] Partita Classica (Senza Limite)\n"
+            "[bold green]2.[/bold green] Partita Blitz (Orologio Scacchistico)"
+        )
+        self._console.print(Panel(menu_text, style="bold blue", expand=False))
+
+        # 1. Scelta della modalità
+        while True:
+            prompt_msg = (
+                "\n[bold magenta]Seleziona un'opzione (1 o 2) > [/bold magenta]"
+            )
+            scelta = self._console.input(prompt_msg).strip()
+            
+            if scelta == "1":
+                return False, 0.0
+            elif scelta == "2":
+                break
+            else:
+                self._console.print(
+                    "[bold red]Opzione non valida. Inserisci 1 o 2.[/bold red]"
+                )
+
+        # 2. Configurazione dei minuti (con controlli di validità)
+        while True:
+            time_prompt = (
+                "\n[bold magenta]Inserisci i minuti per giocatore "
+                "(Max 15) > [/bold magenta]"
+            )
+            minuti_str = self._console.input(time_prompt).strip()
+
+            if not minuti_str.isdigit():
+                self._console.print(
+                    "[bold red]Attenzione: Devi inserire un numero intero "
+                    "valido![/bold red]"
+                )
+                continue
+
+            minuti = int(minuti_str)
+            if minuti < 1 or minuti > 15:
+                self._console.print(
+                    "[bold red]Attenzione: Il tempo deve essere compreso "
+                    "tra 1 e 15 minuti![/bold red]"
+                )
+                continue
+
+            # Converte i minuti inseriti in secondi (float)
+            secondi_totali = float(minuti * 60)
+            return True, secondi_totali

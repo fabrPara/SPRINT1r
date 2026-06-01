@@ -127,24 +127,22 @@ class Board:
                 ):
                     raise WallPlacementError("I muri non possono incrociarsi a croce.")
 
-        # 3. Controllo algoritmico BFS (Piazzato FUORI dal ciclo for)
         simulated_walls = list(self._walls) + [new_wall]
-        p1, p2 = players[0], players[1]
-        p1_coords = p1.get_position().get_coords()
-        p2_coords = p2.get_position().get_coords()
 
-        # Verifica per P1
-        if not PathFinder.has_path(
-            p1_coords, p2_coords, p1._target_row, simulated_walls
-        ):
-            raise WallPlacementError(
-                "Mossa illegale: interrompe l'ultimo percorso di P1."
-            )
+        for p in players:
+            p_coords = p.get_position().get_coords()
 
-        # Verifica per P2
-        if not PathFinder.has_path(
-            p2_coords, p1_coords, p2._target_row, simulated_walls
-        ):
-            raise WallPlacementError(
-                "Mossa illegale: interrompe l'ultimo percorso di P2."
-            )
+            # Raccoglie le coordinate di tutti gli ALTRI giocatori in gara rispetto a 'p'  # noqa: E501
+            other_positions = [
+                other.get_position().get_coords()
+                for other in players
+                if other._id != p._id
+            ]
+
+            # Esegue il controllo del percorso personalizzato per il giocatore corrente
+            if not PathFinder.has_path(
+                p_coords, other_positions, p._target_row, simulated_walls
+            ):
+                raise WallPlacementError(
+                    f"Mossa illegale: interrompe l'ultimo percorso di P{p._id}."
+                )

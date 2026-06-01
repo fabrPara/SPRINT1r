@@ -1,3 +1,5 @@
+"""Modulo controller principale del gioco Quoridor."""
+
 import re
 import shlex
 import threading
@@ -19,46 +21,61 @@ from src.VIEW.BaseView import BaseView
 class GameController:
     """Gestisce l'input dell'utente e coordina il flusso tra Modello e Vista."""
 
-    def __init__(self, model: QuoridorGame, view: BaseView):
+    def __init__(self, model: QuoridorGame, view: BaseView) -> None:
         """Inizializza il controller con le istanze di modello e vista."""
         self._model = model
         self._view = view
         self._exit_requested = False
         self._COL_MAP = {char: i for i, char in enumerate("ABCDEFGHI")}
-        
-       # Nuovi attributi di controllo del tempo
+
         self._is_timed_game = False
-        # Default 3 minuti coordinato con lo stato iniziale
         self._default_time_seconds = 180.0
-        
-        self._players_clocks = {
+
+        self._players_clocks: dict[int, float] = {
             1: self._default_time_seconds,
             2: self._default_time_seconds,
         }
-        
-        self._turn_data = {"input_utente": None, "tempo_scaduto": False}
-        
+
+        self._turn_data: dict[str, object] = {
+            "input_utente": None,
+            "tempo_scaduto": False,
+        }
+
         self._app = typer.Typer(
             add_completion=False,
             help="Gestione comandi Quoridor.",
         )
         self._setup_commands()
 
+    # ------------------------------------------------------------------
+    # Setup / Reset
+    # ------------------------------------------------------------------
+
+    def _init_clocks(self, player_ids: list[int]) -> None:
+        """Inizializza i clock per tutti i giocatori attivi."""
+        self._players_clocks = {pid: self._default_time_seconds for pid in player_ids}
+
     def _reset_game(self) -> None:
-        """Resetta il gioco e richiede i nuovi settaggi di tempo dal menu."""
-        self._model.reset()
-        
-        # Mostra il menu di configurazione prima della nuova partita
+        """Resetta il gioco e richiede i nuovi settaggi dal menu."""
+        num_players = self._ask_num_players()
+        self._model.reset(num_players=num_players)
+
         usa_tempo, secondi = self._view.prompt_game_settings()
         self._is_timed_game = usa_tempo
-        
-        # Valore fittizio se il tempo viene disattivato
         self._default_time_seconds = secondi if usa_tempo else 99999.0
-        
-        self._players_clocks = {
-            1: self._default_time_seconds,
-            2: self._default_time_seconds,
-        }
+
+        player_ids = [p._id for p in self._model.get_game_state()["players"]]
+        self._init_clocks(player_ids)
+
+    def _ask_num_players(self) -> int:
+        """Chiede il numero di giocatori se la view lo supporta, altrimenti default 2."""  # noqa: E501
+        if hasattr(self._view, "prompt_num_players"):
+            return self._view.prompt_num_players()  # pyright: ignore[reportAttributeAccessIssue]
+        return 2
+
+    # ------------------------------------------------------------------
+    # Parsing
+    # ------------------------------------------------------------------
 
     def _parse_coords(self, coords_str: str) -> tuple[int, int, str | None]:
         """Traduce coordinate tipo 'E3' o 'E3H' in indici numerici."""
@@ -72,6 +89,10 @@ class GameController:
         orient = match.group(3).lower() if match.group(3) else None
         return col, row, orient
 
+    # ------------------------------------------------------------------
+    # Comandi Typer
+    # ------------------------------------------------------------------
+
     def _setup_commands(self) -> None:
         """Configura i comandi dell'applicazione Typer."""
 
@@ -79,7 +100,7 @@ class GameController:
         def process_command(
             ctx: typer.Context,
             comando: str = typer.Argument(..., help="Comando da eseguire"),
-        ):
+        ) -> None:
             if ctx.resilient_parsing:
                 return
 
@@ -88,15 +109,7 @@ class GameController:
 
                 match comando_lower:
                     case "abbandona":
-                        winner_id = self._model.resign_current_player()
-                        self._view.show_exit(winner_id)
-                        response = self._view.prompt_new_game()
-                        if response == "s":
-                            self._reset_game()
-                            self._render_game()
-                        else:
-                            self._view.show_exit_message()
-                            self._exit_requested = True
+                        self._handle_resign()
                         return
 
                     case "exit":
@@ -121,6 +134,33 @@ class GameController:
             except Exception as e:
                 self._handle_error(e)
 
+    def _handle_resign(self) -> None:
+        """Gestisce il comando 'abbandona' per entrambe le modalità."""
+        state = self._model.get_game_state()
+        num_players: int = state.get("num_players", 2)
+        resigning_id: int = state["current_player_id"]
+
+        result = self._model.resign_current_player()
+
+        if num_players == 4 and result == 0:
+            # Partita 4P: giocatore rimosso, gli altri continuano
+            self._view.show_player_resigned(resigning_id)
+            self._render_game()
+        else:
+            # Partita 2P o ultimo giocatore rimasto in 4P → vittoria
+            self._view.show_exit(result)
+            response = self._view.prompt_new_game()
+            if response == "s":
+                self._reset_game()
+                self._render_game()
+            else:
+                self._view.show_exit_message()
+                self._exit_requested = True
+
+    # ------------------------------------------------------------------
+    # Errori e rendering
+    # ------------------------------------------------------------------
+
     def _handle_error(self, e: Exception) -> None:
         """Gestisce e visualizza gli errori catturati durante il gioco."""
         valid_errors = (
@@ -138,17 +178,19 @@ class GameController:
     def _render_game(self) -> None:
         """Richiede alla vista di renderizzare lo stato attuale del gioco."""
         state = self._model.get_game_state()
-        
-        # Gestione del dizionario clocks da passare alla View
+
         if self._is_timed_game:
             state["clocks"] = self._players_clocks
         else:
-            # Se non a tempo, passiamo un valore simbolico molto alto o gestito ad hoc
-            state["clocks"] = {1: 99999.0, 2: 99999.0}
-            
+            state["clocks"] = {
+                pid: 99999.0 for pid in [p._id for p in state["players"]]
+            }
+
         self._view.render(state)
 
-    
+    # ------------------------------------------------------------------
+    # Threading (input + timer)
+    # ------------------------------------------------------------------
 
     def _get_input_worker(self) -> None:
         """Thread Worker dedicato alla cattura bloccante dell'input."""
@@ -165,22 +207,29 @@ class GameController:
             time.sleep(0.05)
         self._turn_data["tempo_scaduto"] = True
 
+    # ------------------------------------------------------------------
+    # Loop principale
+    # ------------------------------------------------------------------
+
     def start_game(self) -> None:
         """Ciclo principale di gioco interattivo con supporto multi-threading."""
-        # Configurazione iniziale della primissima partita
+        # Selezione numero giocatori
+        num_players = self._ask_num_players()
+        self._model.reset(num_players=num_players)
+
+        # Configurazione tempo
         usa_tempo, secondi = self._view.prompt_game_settings()
         self._is_timed_game = usa_tempo
         if usa_tempo:
             self._default_time_seconds = secondi
-            self._players_clocks = {1: secondi, 2: secondi}
+
+        player_ids = [p._id for p in self._model.get_game_state()["players"]]
+        self._init_clocks(player_ids)
 
         self._view.show_initial_message()
         self._render_game()
-        
-        # Ciclo vitale dell'applicazione (gestisce le nuove partite consecutive)
+
         while not self._exit_requested:
-            
-            # Ciclo dei turni della singola partita corrente
             while not self._model.check_victory() and not self._exit_requested:
                 curr_id = self._model.get_game_state()["current_player_id"]
 
@@ -188,10 +237,9 @@ class GameController:
                 self._turn_data["tempo_scaduto"] = False
 
                 if self._is_timed_game:
-                    tempo_residuo = self._players_clocks[curr_id]
+                    tempo_residuo = self._players_clocks.get(curr_id, 0.0)
                     ora_inizio_turno = time.time()
 
-                    # Creazione e avvio dei thread concorrenti
                     t_input = threading.Thread(
                         target=self._get_input_worker, daemon=True
                     )
@@ -200,11 +248,10 @@ class GameController:
                         args=(tempo_residuo,),
                         daemon=True,
                     )
-                    
+
                     t_input.start()
                     t_timer.start()
 
-                    # Attesa non bloccante della risoluzione della race condition
                     while (
                         self._turn_data["input_utente"] is None
                         and not self._turn_data["tempo_scaduto"]
@@ -217,23 +264,19 @@ class GameController:
                         self._players_clocks[curr_id] = 0.0
                         self._view.show_timeout(curr_id)
                         self._model.resign_current_player()
-                        break  # Interrompe la partita attuale per timeout
+                        break
 
-                    # Sottrazione del tempo speso per la mossa
-                    nuovo_tempo = (
-                        self._players_clocks[curr_id] - durata_mossa
-                    )
+                    nuovo_tempo = self._players_clocks[curr_id] - durata_mossa
                     self._players_clocks[curr_id] = max(0.0, nuovo_tempo)
-                    
+
                     user_input = self._turn_data["input_utente"]
                 else:
-                    # Modalità classica: input bloccante standard senza thread
                     user_input = self._view.get_input()
 
                 if not user_input or self._exit_requested:
                     continue
 
-                args = shlex.split(user_input)
+                args = shlex.split(str(user_input))
                 if not args:
                     continue
 
@@ -251,18 +294,15 @@ class GameController:
                         break
                     continue
 
-            # Controllo se l'uscita è stata forzata dal comando 'exit' o 'abbandona'
             if self._exit_requested:
                 break
 
-            # Gestione del fine partita (Vittoria standard o Timeout a tavolino)
             game_state = self._model.get_game_state()
             winner_id = game_state["winner"]
-            
+
             if winner_id or self._model.check_victory():
                 self._view.show_victory(winner_id)
-                
-                # Chiede se iniziare una nuova partita dopo la vittoria/timeout
+
                 response = self._view.prompt_new_game()
                 if response == "s":
                     self._reset_game()

@@ -8,13 +8,13 @@ from src.MODEL.QuoridorGame import QuoridorGame
 
 def verify_wall_blocking():
     """Verify that wall blocking works correctly in all scenarios."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("  FINAL VERIFICATION: WALL BLOCKING FUNCTIONALITY")
-    print("="*70 + "\n")
-    
+    print("=" * 70 + "\n")
+
     tests_passed = 0
     tests_total = 0
-    
+
     # Test 1: Horizontal wall blocks upward movement
     tests_total += 1
     print(f"\n[Test {tests_total}] Horizontal wall blocks upward movement")
@@ -22,9 +22,9 @@ def verify_wall_blocking():
         game = QuoridorGame()
         game._players[0].set_position(Cell(5, 5))
         game._players[1].set_position(Cell(8, 9))
-        game.place_wall((5, 4, 'h'))
+        game.place_wall((5, 4, "h"))
         game._current_turn = 1
-        
+
         try:
             game.move_player((5, 4))
             print("  ❌ FAILED: Player jumped the wall!")
@@ -36,7 +36,7 @@ def verify_wall_blocking():
                 print(f"  ❌ FAILED: Wrong error message: {e}")
     except Exception as e:
         print(f"  ❌ FAILED: Unexpected error: {e}")
-    
+
     # Test 2: Horizontal wall blocks downward movement
     tests_total += 1
     print(f"\n[Test {tests_total}] Horizontal wall blocks downward movement")
@@ -44,9 +44,9 @@ def verify_wall_blocking():
         game = QuoridorGame()
         game._players[0].set_position(Cell(5, 3))
         game._players[1].set_position(Cell(8, 9))
-        game.place_wall((5, 4, 'h'))
+        game.place_wall((5, 4, "h"))
         game._current_turn = 1
-        
+
         try:
             game.move_player((5, 4))
             print("  ❌ FAILED: Player jumped the wall!")
@@ -58,7 +58,7 @@ def verify_wall_blocking():
                 print(f"  ❌ FAILED: Wrong error message: {e}")
     except Exception as e:
         print(f"  ❌ FAILED: Unexpected error: {e}")
-    
+
     # Test 3: Vertical wall blocks rightward movement
     tests_total += 1
     print(f"\n[Test {tests_total}] Vertical wall blocks rightward movement")
@@ -66,9 +66,9 @@ def verify_wall_blocking():
         game = QuoridorGame()
         game._players[0].set_position(Cell(4, 5))
         game._players[1].set_position(Cell(8, 9))
-        game.place_wall((5, 4, 'v'))
+        game.place_wall((5, 4, "v"))
         game._current_turn = 1
-        
+
         try:
             game.move_player((5, 5))
             print("  ❌ FAILED: Player jumped the wall!")
@@ -80,7 +80,7 @@ def verify_wall_blocking():
                 print(f"  ❌ FAILED: Wrong error message: {e}")
     except Exception as e:
         print(f"  ❌ FAILED: Unexpected error: {e}")
-    
+
     # Test 4: Vertical wall blocks leftward movement
     tests_total += 1
     print(f"\n[Test {tests_total}] Vertical wall blocks leftward movement")
@@ -88,9 +88,9 @@ def verify_wall_blocking():
         game = QuoridorGame()
         game._players[0].set_position(Cell(6, 5))
         game._players[1].set_position(Cell(8, 9))
-        game.place_wall((5, 4, 'v'))
+        game.place_wall((5, 4, "v"))
         game._current_turn = 1
-        
+
         try:
             game.move_player((5, 5))
             print("  ❌ FAILED: Player jumped the wall!")
@@ -102,7 +102,7 @@ def verify_wall_blocking():
                 print(f"  ❌ FAILED: Wrong error message: {e}")
     except Exception as e:
         print(f"  ❌ FAILED: Unexpected error: {e}")
-    
+
     # Test 5: Valid moves still work around walls
     tests_total += 1
     print(f"\n[Test {tests_total}] Valid moves work around walls")
@@ -110,9 +110,9 @@ def verify_wall_blocking():
         game = QuoridorGame()
         game._players[0].set_position(Cell(5, 3))
         game._players[1].set_position(Cell(8, 9))
-        game.place_wall((5, 4, 'h'))
+        game.place_wall((5, 4, "h"))
         game._current_turn = 1
-        
+
         # Move left should work
         try:
             game.move_player((4, 3))
@@ -126,7 +126,7 @@ def verify_wall_blocking():
             print(f"  ❌ FAILED: Valid move blocked: {e}")
     except Exception as e:
         print(f"  ❌ FAILED: Unexpected error: {e}")
-    
+
     # Test 6: Error message mentions correct wall type
     tests_total += 1
     print(f"\n[Test {tests_total}] Error messages mention correct wall type")
@@ -134,9 +134,9 @@ def verify_wall_blocking():
         game = QuoridorGame()
         game._players[0].set_position(Cell(5, 4))
         game._players[1].set_position(Cell(8, 9))
-        game.place_wall((5, 5, 'h'))  # Horizontal wall
+        game.place_wall((5, 5, "h"))  # Horizontal wall
         game._current_turn = 1
-        
+
         try:
             game.move_player((5, 5))
             print("  ❌ FAILED: Player jumped the wall!")
@@ -149,12 +149,12 @@ def verify_wall_blocking():
                 print(f"  ❌ FAILED: Message format incorrect - '{e}'")
     except Exception as e:
         print(f"  ❌ FAILED: Unexpected error: {e}")
-    
+
     # Print summary
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print(f"  RESULTS: {tests_passed}/{tests_total} tests passed")
-    print("="*70 + "\n")
-    
+    print("=" * 70 + "\n")
+
     if tests_passed == tests_total:
         print("✓ ✓ ✓ SUCCESS! ALL TESTS PASSED! ✓ ✓ ✓")
         print("\n✓ Wall blocking is working correctly!")
@@ -168,5 +168,6 @@ def verify_wall_blocking():
 
 if __name__ == "__main__":
     import sys
+
     success = verify_wall_blocking()
     sys.exit(0 if success else 1)

@@ -1,5 +1,10 @@
+"""Modulo per la gestione del giocatore."""
+
 from .Cell import Cell
 from .Exception import WallDepletionError
+
+WALLS_2P: int = 10
+WALLS_4P: int = 5
 
 
 class Player:
@@ -9,18 +14,25 @@ class Player:
     board, il numero di muri rimanenti e l'obiettivo di vittoria (riga target).
     """
 
-    def __init__(self, player_id: int, start_pos: "Cell", target_row: int):
+    def __init__(
+        self,
+        player_id: int,
+        start_pos: "Cell",
+        target_row: int,
+        walls_count: int = WALLS_2P,
+    ):
         """Inizializza un nuovo giocatore.
 
         Args:
-            player_id(int): Identificativo univoco del giocatore.
-            start_pos(Cell): Istanza di Cell che rappresenta la posizione iniziale.
-            target_row(int): La coordinata Y che il giocatore deve raggiungere per vincere.
+            player_id (int): Identificativo univoco del giocatore.
+            start_pos (Cell): Istanza di Cell che rappresenta la posizione iniziale.
+            target_row (int): La coordinata Y che il giocatore deve raggiungere.
+            walls_count (int): Numero di muri iniziali (default 10 per 2P, 5 per 4P).
 
-        """  # noqa: E501
+        """
         self._id = player_id
         self._position = start_pos
-        self._walls_count = 10  # Numero standard di muri in Quoridor
+        self._walls_count = walls_count
         self._target_row = target_row
 
     def get_walls_count(self) -> int:

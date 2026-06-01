@@ -1,7 +1,9 @@
+"""Modulo principale per la logica del gioco Quoridor."""
+
 from .Board import Board
 from .Cell import Cell
 from .Exception import InvalidCommandError, MovementError, TurnError
-from .Player import Player
+from .Player import WALLS_2P, WALLS_4P, Player
 from .Wall import Wall
 
 
@@ -10,25 +12,90 @@ class QuoridorGame:
 
     Gestisce la logica del tabellone, i giocatori e il loro turno.
     Fornisce metodi per muovere i giocatori, posizionare muri, verificare il vincitore.
+    Supporta sia la modalità a 2 giocatori che quella a 4 giocatori.
     """
 
-    def __init__(self):
-        """Inizializza una nuova partita di Quoridor."""
+    def __init__(self, num_players: int = 2):
+        """Inizializza una nuova partita di Quoridor.
+
+        Args:
+            num_players (int): Numero di giocatori (2 o 4). Default 2.
+
+        """
+        self._num_players = num_players
         self._board = Board()
+        self._players: list[Player] = []
+        self._active_player_ids: list[int] = []
+        self._winner: int | None = None
+        self._current_turn_index: int = 0
+        self._setup_players()
 
-        p1_start = Cell(5, 1)
-        p2_start = Cell(5, 9)
+    # ------------------------------------------------------------------
+    # Setup
+    # ------------------------------------------------------------------
 
-        p1 = Player(player_id=1, start_pos=p1_start, target_row=9)
-        p2 = Player(player_id=2, start_pos=p2_start, target_row=1)
+    def _setup_players(self) -> None:
+        """Crea e posiziona i giocatori in base alla modalità selezionata."""
+        if self._num_players == 4:
+            walls = WALLS_4P
+            # P1: lato sinistro (x=1), obiettivo x=9  — target_row usato come target_col
+            # P2: lato destro  (x=9), obiettivo x=1
+            # P3: lato alto    (y=1), obiettivo y=9
+            # P4: lato basso   (y=9), obiettivo y=1
+            # Convenzione: target_row < 0 indica un obiettivo su colonna (asse x).
+            # target_row >= 1 indica un obiettivo su riga (asse y).
+            configs = [
+                (1, Cell(1, 5), -9),  # P1: parte da (1,5), deve raggiungere colonna 9
+                (2, Cell(9, 5), -1),  # P2: parte da (9,5), deve raggiungere colonna 1
+                (3, Cell(5, 1), 9),  # P3: parte da (5,1), deve raggiungere riga 9
+                (4, Cell(5, 9), 1),  # P4: parte da (5,9), deve raggiungere riga 1
+            ]
+        else:
+            walls = WALLS_2P
+            configs = [
+                (1, Cell(5, 1), 9),
+                (2, Cell(5, 9), 1),
+            ]
 
-        self._players = [p1, p2]
-        self._current_turn = 1
+        self._players = [
+            Player(player_id=pid, start_pos=pos, target_row=target, walls_count=walls)
+            for pid, pos, target in configs
+        ]
+        self._active_player_ids = [p._id for p in self._players]
+        self._current_turn_index = 0
         self._winner = None
 
-    def switch_turn(self):
-        """Cambia il turno passando al giocatore successivo."""
-        self._current_turn = 2 if self._current_turn == 1 else 1
+    # ------------------------------------------------------------------
+    # Turni
+    # ------------------------------------------------------------------
+
+    @property
+    def _current_turn(self) -> int:
+        """Restituisce l'ID del giocatore di turno corrente."""
+        if not self._active_player_ids:
+            return 0
+        return self._active_player_ids[
+            self._current_turn_index % len(self._active_player_ids)
+        ]  # noqa: E501
+
+    def switch_turn(self) -> None:
+        """Avanza al turno del prossimo giocatore attivo."""
+        if self._active_player_ids:
+            self._current_turn_index = (self._current_turn_index + 1) % len(
+                self._active_player_ids
+            )
+
+    def _get_player_by_id(self, player_id: int) -> Player:
+        """Restituisce il Player corrispondente all'ID fornito."""
+        for p in self._players:
+            if p._id == player_id:
+                return p
+        msg = f"Giocatore con ID {player_id} non trovato."
+        raise ValueError(msg)
+
+    # ------------------------------------------------------------------
+    # Movimento
+    # ------------------------------------------------------------------
 
     def move_player(self, coords: tuple[int, int]) -> None:
         """Muove il giocatore corrente nella cella specificata dalle coordinate."""
@@ -40,30 +107,53 @@ class QuoridorGame:
         if not isinstance(target_x, int) or not isinstance(target_y, int):
             raise MovementError("Coordinate non valide. Usa numeri interi.")
 
-        # --- CONTROLLO 1: Confini della scacchiera ---
         if not (1 <= target_x <= 9 and 1 <= target_y <= 9):
             raise MovementError("Movimento fuori dai confini della scacchiera (1-9).")
 
-        current_player = self._players[self._current_turn - 1]
+        current_player = self._get_player_by_id(self._current_turn)
         current_pos = current_player.get_position()
         curr_x, curr_y = current_pos.get_coords()
 
         dx = target_x - curr_x
         dy = target_y - curr_y
 
-        opponent = self._players[1] if self._current_turn == 1 else self._players[0]
-        opp_x, opp_y = opponent.get_position().get_coords()
-        opp_dx = opp_x - curr_x
-        opp_dy = opp_y - curr_y
-        opponent_adjacent = abs(opp_dx) + abs(opp_dy) == 1
+        # Raccoglie tutti gli avversari attivi (non il giocatore corrente)
+        opponents = [
+            p
+            for p in self._players
+            if p._id != self._current_turn and p._id in self._active_player_ids
+        ]
+
+        # --- RICERCA AVVERSARIO ADIACENTE OTTIMIZZATA PER IL SALTO ---
+        # Un avversario è d'intralcio se si trova nella casella adiacente in cui stiamo provando ad andare,  # noqa: E501
+        # oppure a metà strada se stiamo tentando un salto dritto di 2 caselle.
+        adjacent_opponent: Player | None = None
+        for opp in opponents:
+            ox, oy = opp.get_position().get_coords()
+            # Se la mossa è un salto dritto di 2 caselle, l'avversario deve essere a metà strada  # noqa: E501
+            if abs(dx) == 2 and dy == 0 and ox == curr_x + (dx // 2) and oy == curr_y:  # noqa: SIM114
+                adjacent_opponent = opp
+                break
+            elif dx == 0 and abs(dy) == 2 and ox == curr_x and oy == curr_y + (dy // 2):
+                adjacent_opponent = opp
+                break
+            # Se la mossa è diagonale (es. salto diagonale), cerchiamo l'avversario nella casella adiacente di partenza  # noqa: E501
+            elif abs(dx) == 1 and abs(dy) == 1:
+                # Se ci muoviamo in diagonale, l'avversario potrebbe essere o sulla stessa riga o sulla stessa colonna  # noqa: E501
+                if (ox == curr_x and oy == target_y) or (
+                    ox == target_x and oy == curr_y
+                ):  # noqa: E501
+                    adjacent_opponent = opp
+                    break
 
         def is_within_bounds(x: int, y: int) -> bool:
             return 1 <= x <= 9 and 1 <= y <= 9
 
         def is_cell_occupied(x: int, y: int) -> bool:
             return any(
-                player.get_position().get_coords() == (x, y)
-                for player in self._players
+                p.get_position().get_coords() == (x, y)
+                for p in self._players
+                if p._id in self._active_player_ids
             )
 
         def segment_blocked(x1: int, y1: int, x2: int, y2: int) -> bool:
@@ -90,13 +180,16 @@ class QuoridorGame:
                     return True
             return False
 
-        direct_jump_x = curr_x + 2 * opp_dx
-        direct_jump_y = curr_y + 2 * opp_dy
-        direct_target = (direct_jump_x, direct_jump_y)
-        diagonal_targets = []
-        pivot_blocked = segment_blocked(curr_x, curr_y, opp_x, opp_y)
+        if adjacent_opponent is not None:
+            opp_x, opp_y = adjacent_opponent.get_position().get_coords()
+            opp_dx = opp_x - curr_x
+            opp_dy = opp_y - curr_y
 
-        if opponent_adjacent:
+            direct_jump_x = curr_x + 2 * opp_dx
+            direct_jump_y = curr_y + 2 * opp_dy
+            direct_target = (direct_jump_x, direct_jump_y)
+            pivot_blocked = segment_blocked(curr_x, curr_y, opp_x, opp_y)
+
             if (target_x, target_y) == (opp_x, opp_y):
                 raise MovementError("Movimento non valido: cella occupata.")
 
@@ -107,28 +200,18 @@ class QuoridorGame:
                     or is_cell_occupied(direct_jump_x, direct_jump_y)
                     or segment_blocked(opp_x, opp_y, direct_jump_x, direct_jump_y)
                 ):
-                    raise MovementError(
-                        "Salto non permesso: muro blocca il passaggio."
-                    )
+                    raise MovementError("Salto non permesso: muro blocca il passaggio.")
                 current_player.set_position(Cell(direct_jump_x, direct_jump_y))
                 self.switch_turn()
                 return
 
             if opp_dx == 0:
-                diagonal_targets = [
-                    (opp_x - 1, opp_y),
-                    (opp_x + 1, opp_y),
-                ]
+                diagonal_targets = [(opp_x - 1, opp_y), (opp_x + 1, opp_y)]
             else:
-                diagonal_targets = [
-                    (opp_x, opp_y - 1),
-                    (opp_x, opp_y + 1),
-                ]
+                diagonal_targets = [(opp_x, opp_y - 1), (opp_x, opp_y + 1)]
 
             if pivot_blocked and (target_x, target_y) in diagonal_targets:
-                raise MovementError(
-                    "Salto non permesso: muro blocca il passaggio."
-                )
+                raise MovementError("Salto non permesso: muro blocca il passaggio.")
 
             if (target_x, target_y) in diagonal_targets:
                 direct_blocked = (
@@ -143,26 +226,21 @@ class QuoridorGame:
                 if is_cell_occupied(target_x, target_y):
                     raise MovementError("Movimento non valido: cella occupata.")
                 if segment_blocked(opp_x, opp_y, target_x, target_y):
-                    raise MovementError(
-                        "Salto non permesso: muro blocca il passaggio."
-                    )
+                    raise MovementError("Salto non permesso: muro blocca il passaggio.")
                 current_player.set_position(Cell(target_x, target_y))
                 self.switch_turn()
                 return
 
+        # Controllo standard per mosse di un singolo passo
         if not ((abs(dx) == 1 and dy == 0) or (dx == 0 and abs(dy) == 1)):
             raise MovementError(
                 "Movimento non valido: puoi muoverti solo di una cella."
             )
 
-        # --- CONTROLLO 3: Presenza di muri basato sul vostro sistema ---
         for wall in self._board.get_walls():
             wx, wy = wall.get_start_cell().get_coords()
             w_orient = wall.get_orientation().lower()
 
-            # Movimento Verticale (dy != 0)
-            # Un muro H in (wx, wy) blocca il passaggio tra y e y-1
-            # se la colonna è wx o wx+1.
             if (
                 dy != 0
                 and w_orient == "h"
@@ -171,9 +249,6 @@ class QuoridorGame:
             ):
                 raise MovementError("Un muro orizzontale blocca il passaggio.")
 
-            # Movimento Orizzontale (dx != 0)
-            # Un muro V in (wx, wy) blocca il passaggio tra x e x-1
-            # se la riga è wy o wy-1.
             if (
                 dx != 0
                 and w_orient == "v"
@@ -182,52 +257,90 @@ class QuoridorGame:
             ):
                 raise MovementError("Un muro verticale blocca il passaggio.")
 
+        # Se la casella d'arrivo di 1 passo è comunque occupata da qualcuno, impedisci la mossa  # noqa: E501
+        if is_cell_occupied(target_x, target_y):
+            raise MovementError("Movimento non valido: cella occupata.")
+
         current_player.set_position(Cell(target_x, target_y))
         self.switch_turn()
+
+    # ------------------------------------------------------------------
+    # Vittoria
+    # ------------------------------------------------------------------
+
+    def check_victory(self) -> bool:
+        """Controlla se uno dei giocatori ha raggiunto la vittoria."""
+        for player in self._players:
+            if player._id not in self._active_player_ids:
+                continue
+
+            cx, cy = player.get_position().get_coords()
+            target = player._target_row
+
+            # target < 0  → obiettivo su colonna (modalità 4P, P1 e P2)
+            # target >= 1 → obiettivo su riga    (modalità 2P e P3/P4)
+            reached = (cx == -target) if target < 0 else (cy == target)
+
+            if reached:
+                self._winner = player._id
+                return True
+
+        return False
+
+    # ------------------------------------------------------------------
+    # Stato partita
+    # ------------------------------------------------------------------
 
     def get_game_state(self) -> dict:
         """Ritorna lo stato attuale del gioco per permetterne il rendering."""
         return {
             "board": self._board,
             "players": self._players,
+            "active_player_ids": list(self._active_player_ids),
             "current_player_id": self._current_turn,
             "winner": self._winner,
+            "num_players": self._num_players,
         }
 
-    def check_victory(self) -> bool:
-        """Controlla se uno dei giocatori ha raggiunto la vittoria."""
-        for player in self._players:
-            current_pos = player.get_position().get_coords()
-            current_row = current_pos[1]
-
-            if current_row == player._target_row:
-                self._winner = player._id
-                return True
-
-        return False
+    # ------------------------------------------------------------------
+    # Abbandono
+    # ------------------------------------------------------------------
 
     def resign_current_player(self) -> int:
-        """Riconosce la resa del giocatore di turno e restituisce il vincitore."""
+        """Gestisce la resa del giocatore corrente.
+
+        In modalità 2P: l'avversario vince immediatamente.
+        In modalità 4P: il giocatore viene rimosso dal ciclo, la partita continua.
+        Restituisce l'ID del vincitore (2P) o 0 se la partita prosegue (4P).
+        """
         if self._winner is not None:
             return self._winner
 
-        self._winner = 2 if self._current_turn == 1 else 1
-        return self._winner
+        resigning_id = self._current_turn
 
-    def reset(self) -> None:
-        """Resetta il gioco per una nuova partita."""
-        self._board = Board()
+        if self._num_players == 2:
+            self._winner = 2 if resigning_id == 1 else 1
+            return self._winner
 
-        p1_start = Cell(5, 1)
-        p2_start = Cell(5, 9)
+        # Modalità 4P: rimuovi il giocatore dal ciclo
+        if resigning_id in self._active_player_ids:
+            idx = self._active_player_ids.index(resigning_id)
+            self._active_player_ids.remove(resigning_id)
+            # Aggiusta l'indice per non saltare il prossimo giocatore
+            if self._active_player_ids:
+                self._current_turn_index = idx % len(self._active_player_ids)
 
-        p1 = Player(player_id=1, start_pos=p1_start, target_row=9)
-        p2 = Player(player_id=2, start_pos=p2_start, target_row=1)
+        # Se rimane un solo giocatore, vince lui
+        if len(self._active_player_ids) == 1:
+            self._winner = self._active_player_ids[0]
+            return self._winner
 
-        self._players = [p1, p2]
-        self._current_turn = 1
-        self._winner = None
-    
+        return 0  # Partita ancora in corso
+
+    # ------------------------------------------------------------------
+    # Muri
+    # ------------------------------------------------------------------
+
     def place_wall(self, coords: tuple[int, int, str]) -> None:
         """Piazza un muro per il giocatore corrente."""
         if self._winner is not None:
@@ -236,16 +349,35 @@ class QuoridorGame:
         if len(coords) != 3 or coords[2] not in ["h", "v"]:
             raise InvalidCommandError("Orientamento non valido. Usa 'h' o 'v'.")
 
-        current_player = self._players[self._current_turn - 1]
+        current_player = self._get_player_by_id(self._current_turn)
         current_player.use_wall()
 
         start_cell = Cell(coords[0], coords[1])
         new_wall = Wall(start_cell=start_cell, orientation=coords[2])
 
         try:
-            self._board.add_wall(new_wall,self._players)
+            active_players = [
+                p for p in self._players if p._id in self._active_player_ids
+            ]  # noqa: E501
+            self._board.add_wall(new_wall, active_players)
         except Exception as e:
             current_player._walls_count += 1
             raise e
 
         self.switch_turn()
+
+    # ------------------------------------------------------------------
+    # Reset
+    # ------------------------------------------------------------------
+
+    def reset(self, num_players: int | None = None) -> None:
+        """Resetta il gioco per una nuova partita.
+
+        Args:
+            num_players (int | None): Se fornito, cambia la modalità di gioco.
+
+        """
+        if num_players is not None:
+            self._num_players = num_players
+        self._board = Board()
+        self._setup_players()

@@ -291,7 +291,6 @@ Esempio: a1 è l'angolo in alto a sinistra, i9 è l'angolo in basso a destra."""
         self._console.clear()
 
         menu_text = (
-            "[bold cyan]⚙️  IMPOSTAZIONI NUOVA PARTITA ⚙️[/bold cyan]\n\n"
             "Scegli la modalità di gioco:\n"
             "[bold green]1.[/bold green] Partita Classica (Senza Limite)\n"
             "[bold green]2.[/bold green] Partita Blitz (Orologio Scacchistico)"
@@ -343,9 +342,10 @@ Esempio: a1 è l'angolo in alto a sinistra, i9 è l'angolo in basso a destra."""
         """
         self._console.print(
             Panel(
-                "[bold cyan]Scegli la modalità:\n"
+                "[bold cyan]⚙️  IMPOSTAZIONI NUOVA PARTITA ⚙️[/bold cyan]\n\n"
+                "Seleziona il numero di giocatori:\n"
                 "[bold green]1.[/bold green] 2 Giocatori\n"
-                "[bold green]2.[/bold green] 4 Giocatori[/bold cyan]",
+                "[bold green]2.[/bold green] 4 Giocatori",
                 style="bold blue",
                 expand=False,
             )

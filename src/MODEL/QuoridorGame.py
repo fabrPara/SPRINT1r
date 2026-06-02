@@ -293,9 +293,14 @@ class QuoridorGame:
 
     def get_game_state(self) -> dict:
         """Ritorna lo stato attuale del gioco per permetterne il rendering."""
+        # Filtra i giocatori includendo nella stampa SOLO quelli ancora attivi
+        active_players_for_render = [
+            p for p in self._players if p._id in self._active_player_ids
+        ]
+
         return {
             "board": self._board,
-            "players": self._players,
+            "players": active_players_for_render,  # Mostra solo chi è in gioco
             "active_player_ids": list(self._active_player_ids),
             "current_player_id": self._current_turn,
             "winner": self._winner,

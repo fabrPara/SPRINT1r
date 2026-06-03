@@ -28,6 +28,7 @@ class QuoridorGame:
         self._active_player_ids: list[int] = []
         self._winner: int | None = None
         self._current_turn_index: int = 0
+        self._move_history: list[dict] = []
         self._setup_players()
 
     # ------------------------------------------------------------------
@@ -92,6 +93,61 @@ class QuoridorGame:
                 return p
         msg = f"Giocatore con ID {player_id} non trovato."
         raise ValueError(msg)
+
+    # ------------------------------------------------------------------
+    # Cronologia Mosse
+    # ------------------------------------------------------------------
+
+    def _coord_to_notation(self, col: int, row: int, orient: str | None = None) -> str:
+        """Converti coordinate numeriche a notazione alfanumerica.
+
+        Args:
+            col (int): Colonna (1-9)
+            row (int): Riga (1-9)
+            orient (str): Orientamento ('h' o 'v' per muri)
+
+        Returns:
+            str: Notazione (es. 'e1', 'e3h', 'e3v')
+
+        """
+        col_letter = chr(ord('a') + col - 1)
+        if orient:
+            return f"{col_letter}{row}{orient.lower()}"
+        return f"{col_letter}{row}"
+
+    def _record_move(self, player_id: int, move_type: str, notation: str) -> None:
+        """Registra una mossa nella cronologia.
+
+        Args:
+            player_id (int): ID del giocatore che ha fatto la mossa
+            move_type (str): Tipo di mossa ('movimento' o 'muro')
+            notation (str): Notazione della mossa
+
+        """
+        move_entry = {
+            "player_id": player_id,
+            "move_type": move_type,
+            "notation": notation,
+        }
+        self._move_history.append(move_entry)
+
+    def get_move_history(self) -> list[dict]:
+        """Restituisce la cronologia completa delle mosse.
+
+        Returns:
+            list[dict]: Lista di mosse registrate
+
+        """
+        return self._move_history.copy()
+
+    def has_moves(self) -> bool:
+        """Verifica se sono state effettuate mosse nella partita.
+
+        Returns:
+            bool: True se ci sono mosse, False altrimenti
+
+        """
+        return len(self._move_history) > 0
 
     # ------------------------------------------------------------------
     # Movimento
@@ -202,6 +258,8 @@ class QuoridorGame:
                 ):
                     raise MovementError("Salto non permesso: muro blocca il passaggio.")
                 current_player.set_position(Cell(direct_jump_x, direct_jump_y))
+                notation = self._coord_to_notation(direct_jump_x, direct_jump_y)
+                self._record_move(self._current_turn, "movimento", notation)
                 self.switch_turn()
                 return
 
@@ -228,6 +286,8 @@ class QuoridorGame:
                 if segment_blocked(opp_x, opp_y, target_x, target_y):
                     raise MovementError("Salto non permesso: muro blocca il passaggio.")
                 current_player.set_position(Cell(target_x, target_y))
+                notation = self._coord_to_notation(target_x, target_y)
+                self._record_move(self._current_turn, "movimento", notation)
                 self.switch_turn()
                 return
 
@@ -262,6 +322,8 @@ class QuoridorGame:
             raise MovementError("Movimento non valido: cella occupata.")
 
         current_player.set_position(Cell(target_x, target_y))
+        notation = self._coord_to_notation(target_x, target_y)
+        self._record_move(self._current_turn, "movimento", notation)
         self.switch_turn()
 
     # ------------------------------------------------------------------
@@ -369,6 +431,8 @@ class QuoridorGame:
             current_player._walls_count += 1
             raise e
 
+        notation = self._coord_to_notation(coords[0], coords[1], coords[2])
+        self._record_move(self._current_turn, "muro", notation)
         self.switch_turn()
 
     # ------------------------------------------------------------------
@@ -385,4 +449,5 @@ class QuoridorGame:
         if num_players is not None:
             self._num_players = num_players
         self._board = Board()
+        self._move_history = []
         self._setup_players()

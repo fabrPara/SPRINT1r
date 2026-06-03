@@ -122,6 +122,10 @@ class GameController:
                         self._render_game()
                         return
 
+                    case "mosse":
+                        self._show_move_history()
+                        return
+
                     case _:
                         col, row, orient = self._parse_coords(comando)
                         if orient:
@@ -156,6 +160,15 @@ class GameController:
             else:
                 self._view.show_exit_message()
                 self._exit_requested = True
+
+    def _show_move_history(self) -> None:
+        """Mostra la cronologia delle mosse effettuate nella partita."""
+        state = self._model.get_game_state()
+        move_history = self._model.get_move_history()
+        num_players = state.get("num_players", 2)
+        
+        self._view.show_move_history(move_history, num_players)
+        self._render_game()
 
     # ------------------------------------------------------------------
     # Errori e rendering

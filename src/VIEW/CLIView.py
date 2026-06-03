@@ -238,6 +238,9 @@ Non puoi piazzare:
 [bold green]<cella>v[/bold green]            Piazza un muro verticale.
                       Es: e5v oppure E5V
 
+[bold green]mosse[/bold green]                Visualizza la cronologia delle mosse.
+                      (Disponibile durante la partita)
+
 [bold green]abbandona[/bold green]            Abbandona la partita (o esci dal ciclo in 4P).
 [bold green]exit[/bold green]                 Esci dal gioco.
 [bold green]help[/bold green]                 Mostra questo messaggio.
@@ -361,3 +364,65 @@ Esempio: a1 è l'angolo in alto a sinistra, i9 è l'angolo in basso a destra."""
             self._console.print(
                 "[bold red]Opzione non valida. Inserisci 1 o 2.[/bold red]"
             )
+
+    def show_move_history(self, move_history: list[dict], num_players: int) -> None:
+        """Mostra la cronologia delle mosse effettuate nella partita.
+        
+        Args:
+            move_history (list[dict]): Lista di mosse con player_id, move_type, notation
+            num_players (int): Numero di giocatori (2 o 4)
+
+        """
+        self._console.clear()
+        
+        if not move_history:
+            no_moves_panel = Panel(
+                "[bold yellow]Non è stata ancora effettuata una mossa![/bold yellow]",
+                style="bold yellow",
+                expand=False,
+            )
+            self._console.print(no_moves_panel)
+            self._console.input(
+                "\n[bold magenta]Premi Invio per tornare al gioco > [/bold magenta]"
+            )
+            return
+        
+        # Costruisci la cronologia per turni
+        # Ogni turno contiene le mosse di tutti i giocatori (in ordine di giocata)
+        mosse_per_turno: dict[int, list[str]] = {}
+
+        for mossa_index, mossa in enumerate(move_history):
+            player_id = mossa["player_id"]
+            notation = mossa["notation"]
+
+            # Raggruppa le mosse per turno logico
+            # In 2P: turno = (mossa_index // 2) + 1
+            # In 4P: turno = (mossa_index // 4) + 1
+            turno_numero = (mossa_index // num_players) + 1
+
+            if turno_numero not in mosse_per_turno:
+                mosse_per_turno[turno_numero] = []
+
+            color = _player_color(player_id)
+            entry = f"[{color}]P{player_id}[/{color}] → {notation}"
+            mosse_per_turno[turno_numero].append(entry)
+        
+        # Formatta l'output per turni
+        history_lines = []
+        for turno in sorted(mosse_per_turno.keys()):
+            mosse_turno = mosse_per_turno[turno]
+            turno_str = f"[bold blue]TURNO {turno}[/bold blue] " + " ".join(mosse_turno)
+            history_lines.append(turno_str)
+        
+        history_text = "\n".join(history_lines)
+        
+        history_panel = Panel(
+            history_text,
+            title="[bold cyan]📋 CRONOLOGIA MOSSE[/bold cyan]",
+            style="bold cyan",
+            expand=False,
+        )
+        self._console.print(history_panel)
+        self._console.input(
+            "\n[bold magenta]Premi Invio per tornare al gioco > [/bold magenta]"
+        )

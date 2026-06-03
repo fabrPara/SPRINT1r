@@ -56,3 +56,13 @@ class BaseView(ABC):
         Implementazione di default non-astratta: le view possono sovrascriverla
         o usare questa versione base che non fa nulla.
         """
+
+    @abstractmethod
+    def show_move_history(self, move_history: list[dict], num_players: int) -> None:
+        """Mostra la cronologia delle mosse effettuate nella partita.
+
+        Args:
+            move_history (list[dict]): Lista di mosse con player_id, move_type, notation
+            num_players (int): Numero di giocatori (2 o 4)
+
+        """

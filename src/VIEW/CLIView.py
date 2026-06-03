@@ -393,7 +393,20 @@ Esempio: a1 è l'angolo in alto a sinistra, i9 è l'angolo in basso a destra."""
 
         for mossa_index, mossa in enumerate(move_history):
             player_id = mossa["player_id"]
-            notation = mossa["notation"]
+            move_type = mossa.get("move_type", "")
+            notation = mossa.get("notation", "")
+
+            # Se l'evento speciale non fornisce una notation,
+            # sostituisci con un'etichetta leggibile
+            if not notation:
+                if move_type == "resign":
+                    notation = "abbandona"
+                elif move_type == "timeout":
+                    notation = "tempo scaduto"
+                elif move_type == "vittoria":
+                    notation = "vince"
+                else:
+                    notation = move_type or ""
 
             # Raggruppa le mosse per turno logico
             # In 2P: turno = (mossa_index // 2) + 1

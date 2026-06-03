@@ -131,6 +131,29 @@ class QuoridorGame:
         }
         self._move_history.append(move_entry)
 
+    def record_event(
+        self,
+        player_id: int,
+        event_type: str,
+        notation: str | None = None,
+    ) -> None:
+        """Registra un evento speciale nella cronologia.
+
+        Esempi: 'resign', 'timeout', 'vittoria'. Evita duplicati per vittoria.
+        """
+        # Evita duplicati di vittoria per lo stesso giocatore
+        if event_type == "vittoria":
+            for e in self._move_history:
+                if e.get("move_type") == "vittoria" and e.get("player_id") == player_id:
+                    return
+
+        entry = {
+            "player_id": player_id,
+            "move_type": event_type,
+            "notation": notation or "",
+        }
+        self._move_history.append(entry)
+
     def get_move_history(self) -> list[dict]:
         """Restituisce la cronologia completa delle mosse.
 

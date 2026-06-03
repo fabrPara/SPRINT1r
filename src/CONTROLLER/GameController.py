@@ -1,5 +1,6 @@
 """Modulo controller principale del gioco Quoridor."""
 
+import contextlib
 import re
 import shlex
 import threading
@@ -145,6 +146,9 @@ class GameController:
         resigning_id: int = state["current_player_id"]
 
         result = self._model.resign_current_player()
+        # Registra nella cronologia l'evento di resa
+        with contextlib.suppress(Exception):
+            self._model.record_event(resigning_id, "resign")
 
         if num_players == 4 and result == 0:
             # Partita 4P: giocatore rimosso, gli altri continuano
@@ -152,6 +156,11 @@ class GameController:
             self._render_game()
         else:
             # Partita 2P o ultimo giocatore rimasto in 4P → vittoria
+            # Se la resa ha determinato un vincitore, registralo
+            with contextlib.suppress(Exception):
+                if result:
+                    self._model.record_event(result, "vittoria")
+
             self._view.show_exit(result)
             response = self._view.prompt_new_game()
             if response == "s":
@@ -276,7 +285,12 @@ class GameController:
                     if self._turn_data["tempo_scaduto"]:
                         self._players_clocks[curr_id] = 0.0
                         self._view.show_timeout(curr_id)
-                        self._model.resign_current_player()
+                        result = self._model.resign_current_player()
+                        # Registra timeout e possibile vittoria nella cronologia
+                        with contextlib.suppress(Exception):
+                            self._model.record_event(curr_id, "timeout")
+                            if result:
+                                self._model.record_event(result, "vittoria")
                         break
 
                     nuovo_tempo = self._players_clocks[curr_id] - durata_mossa
@@ -314,6 +328,11 @@ class GameController:
             winner_id = game_state["winner"]
 
             if winner_id or self._model.check_victory():
+                # Registra la vittoria nella cronologia se non già registrata
+                with contextlib.suppress(Exception):
+                    if winner_id:
+                        self._model.record_event(winner_id, "vittoria")
+
                 self._view.show_victory(winner_id)
 
                 response = self._view.prompt_new_game()

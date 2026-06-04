@@ -2,7 +2,9 @@
 
 import contextlib
 import re
+import select
 import shlex
+import sys
 import threading
 import time
 
@@ -127,6 +129,10 @@ class GameController:
                         self._show_move_history()
                         return
 
+                    case "replay":
+                        self._start_replay()
+                        return
+
                     case _:
                         col, row, orient = self._parse_coords(comando)
                         if orient:
@@ -177,6 +183,145 @@ class GameController:
         num_players = state.get("num_players", 2)
         
         self._view.show_move_history(move_history, num_players)
+        self._render_game()
+
+    def _is_replay_available(self) -> bool:
+        """Determina se la replay è disponibile (partita terminata)."""
+        state = self._model.get_game_state()
+        return bool(state.get("winner") or self._model.check_victory())
+
+    def _get_replay_moves(self) -> list[dict]:
+        """Ritorna solo le mosse applicabili alla replay (movimento e muro)."""
+        return [
+            entry
+            for entry in self._model.get_move_history()
+            if entry.get("move_type") in {"movimento", "muro"}
+        ]
+
+    def _apply_replay_move(self, replay_game: QuoridorGame, move_entry: dict) -> None:
+        """Applica una mossa di replay al modello temporaneo."""
+        notation = move_entry.get("notation", "")
+        if not notation:
+            return
+
+        col, row, orient = self._parse_coords(notation)
+        if orient:
+            replay_game.place_wall((col, row, orient))
+        else:
+            replay_game.move_player((col, row))
+
+    def _build_replay_game(self, steps: int) -> QuoridorGame:
+        """Crea un modello di replay e applica le prime N mosse."""
+        state = self._model.get_game_state()
+        num_players = state.get("num_players", 2)
+        replay_game = QuoridorGame(num_players=num_players)
+
+        replay_moves = self._get_replay_moves()
+        for entry in replay_moves[:steps]:
+            self._apply_replay_move(replay_game, entry)
+
+        replay_game.check_victory()
+        return replay_game
+
+    def _start_replay(self) -> None:
+        """Avvia il loop di replay della partita terminata."""
+        if not self._is_replay_available():
+            self._view.show_error(
+                "Replay disponibile solo a partita terminata."
+            )
+            self._render_game()
+            return
+
+        replay_moves = self._get_replay_moves()
+        if not replay_moves:
+            self._view.show_error("Non ci sono mosse da riprodurre.")
+            self._render_game()
+            return
+
+        current_step = 0
+        max_steps = len(replay_moves)
+
+        while True:
+            replay_game = self._build_replay_game(current_step)
+            self._view.render(replay_game.get_game_state())
+            print(
+                "\n[REPLAY] 1 = indietro, 2 = avanti, 3 = automatico, 0 = esci replay"
+            )
+            if current_step == 0:
+                print("Sei all'inizio della partita. 1 non è disponibile.")
+            elif current_step == max_steps:
+                print("Sei alla fine della partita. 2 non è disponibile.")
+
+            command = self._view.get_input()
+            if command == "1":
+                if current_step > 0:
+                    current_step -= 1
+                else:
+                    self._view.show_error(
+                        "Sei già all'inizio della replay, non puoi tornare indietro."
+                    )
+                continue
+
+            if command == "2":
+                if current_step < max_steps:
+                    current_step += 1
+                else:
+                    self._view.show_error(
+                        "Sei già alla fine della replay, non puoi andare oltre."
+                    )
+                continue
+
+            if command == "3":
+                if current_step == max_steps:
+                    self._view.show_error(
+                        "La replay è già arrivata alla fine."
+                    )
+                    continue
+
+                print(
+                    "\n[REPLAY] Riproduzione automatica in corso... "
+                    "Premi 0 per stoppare."
+                )
+
+                for next_step in range(current_step + 1, max_steps + 1):
+                    replay_game = self._build_replay_game(next_step)
+                    self._view.render(replay_game.get_game_state())
+                    print(
+                        "\n[REPLAY] Passo "
+                        f"{next_step}/{max_steps}: "
+                        "riproduzione automatica..."
+                    )
+                    current_step = next_step
+
+                    stopped = False
+                    for _ in range(10):
+                        time.sleep(0.2)
+                        try:
+                            ready = select.select([sys.stdin], [], [], 0.001)
+                            if ready[0]:
+                                user_input = sys.stdin.readline().strip().lower()
+                                if user_input == "0":
+                                    print("\n[REPLAY] Uscita dal replay.")
+                                    self._render_game()
+                                    return
+                                stopped = True
+                                break
+                        except Exception:
+                            pass
+
+                    if stopped:
+                        break
+
+                print("\n[REPLAY] Replay automatico completato.")
+                continue
+
+            if command == "0" or command == "exit":
+                break
+
+            self._view.show_error(
+                "Comando non valido durante il replay. Usa solo 1, 2, 3 o 0."
+            )
+
         self._render_game()
 
     # ------------------------------------------------------------------
@@ -334,6 +479,11 @@ class GameController:
                         self._model.record_event(winner_id, "vittoria")
 
                 self._view.show_victory(winner_id)
+
+                # Offri la possibilità di fare il replay
+                replay_response = self._view.prompt_replay()
+                if replay_response == "s":
+                    self._start_replay()
 
                 response = self._view.prompt_new_game()
                 if response == "s":

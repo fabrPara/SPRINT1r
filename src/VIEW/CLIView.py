@@ -284,6 +284,18 @@ Esempio: a1 è l'angolo in alto a sinistra, i9 è l'angolo in basso a destra."""
         )
         return response
 
+    def prompt_replay(self) -> str:
+        """Chiede all'utente se vuole vedere il replay della partita."""
+        response = (
+            self._console.input(
+                "\n[bold cyan]Desideri vedere il replay della partita? "
+                "(Si = s, No = n) > [/bold cyan]"
+            )
+            .strip()
+            .lower()
+        )
+        return response
+
     def prompt_game_settings(self) -> tuple[bool, float]:
         """Mostra il menu di configurazione della partita.
 

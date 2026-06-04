@@ -47,6 +47,10 @@ class BaseView(ABC):
         """Chiede se si vuole iniziare una nuova partita. Restituisce 's' o 'n'."""
 
     @abstractmethod
+    def prompt_replay(self) -> str:
+        """Chiede se si vuole vedere il replay della partita. Restituisce 's' o 'n'."""
+
+    @abstractmethod
     def prompt_game_settings(self) -> tuple[bool, float]:
         """Mostra il menu di configurazione. Restituisce (usa_tempo, secondi_totali)."""
 

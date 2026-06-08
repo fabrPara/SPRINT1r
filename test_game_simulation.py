@@ -108,11 +108,9 @@ def test_wall_blocking_from_other_side():
     model._current_turn_index = 0
     try:
         model.move_player((5, 4))
-        print("❌ ERROR: PLAYER JUMPED OVER THE WALL!")
-        return False
+        assert False, "PLAYER JUMPED OVER THE WALL!"
     except Exception as e:
         print(f"✓ CORRECTLY BLOCKED: {e}")
-        return True
 
 
 if __name__ == "__main__":

@@ -65,7 +65,7 @@ def test_validate_wall_horizontal_last_column_error():
     game = QuoridorGame(num_players=2)
 
     with pytest.raises(WallPlacementError):
-        game.place_wall((8, 4, "h"))
+        game.place_wall((9, 4, "h"))
 
 
 def test_game_rollback_on_placement_error():

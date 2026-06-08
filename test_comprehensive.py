@@ -55,8 +55,7 @@ def test_horizontal_wall():
     print("\n--- Test Case 1a: P1 at (5, 3) tries to move to (5, 4) ---")
     try:
         game.move_player((5, 4))
-        print("❌ FAILED: Player jumped over the wall!")
-        return False
+        assert False, "Player jumped over the wall!"
     except Exception as e:
         print(f"✓ PASSED: {e}")
 
@@ -70,12 +69,9 @@ def test_horizontal_wall():
     print("\n--- Test Case 1b: P1 at (5, 5) tries to move to (5, 4) ---")
     try:
         game.move_player((5, 4))
-        print("❌ FAILED: Player jumped over the wall!")
-        return False
+        assert False, "Player jumped over the wall!"
     except Exception as e:
         print(f"✓ PASSED: {e}")
-
-    return True
 
 
 def test_vertical_wall():
@@ -103,8 +99,7 @@ def test_vertical_wall():
     game._current_turn_index = 0
     try:
         game.move_player((5, 5))
-        print("❌ FAILED: Player jumped over the wall!")
-        return False
+        assert False, "Player jumped over the wall!"
     except Exception as e:
         print(f"✓ PASSED: {e}")
 
@@ -113,12 +108,9 @@ def test_vertical_wall():
     game._current_turn_index = 0
     try:
         game.move_player((5, 5))
-        print("❌ FAILED: Player jumped over the wall!")
-        return False
+        assert False, "Player jumped over the wall!"
     except Exception as e:
         print(f"✓ PASSED: {e}")
-
-    return True
 
 
 def test_valid_moves():
@@ -140,16 +132,10 @@ def test_valid_moves():
         game.move_player((4, 3))
         print("✓ PASSED: Valid move allowed")
         p1_pos = game._players[0].get_position().get_coords()
-        if p1_pos == (4, 3):
-            print(f"✓ P1 correctly at {p1_pos}")
-        else:
-            print(f"❌ FAILED: P1 at {p1_pos}, expected (4, 3)")
-            return False
+        assert p1_pos == (4, 3), f"P1 at {p1_pos}, expected (4, 3)"
+        print(f"✓ P1 correctly at {p1_pos}")
     except Exception as e:
-        print(f"❌ FAILED: Valid move blocked - {e}")
-        return False
-
-    return True
+        assert False, f"Valid move blocked - {e}"
 
 
 def test_error_messages():
@@ -169,11 +155,8 @@ def test_error_messages():
         game.move_player((5, 4))
     except Exception as e:
         error_msg = str(e)
-        if "orizzontale" in error_msg.lower():
-            print(f"✓ PASSED: Correct message - '{e}'")
-        else:
-            print(f"❌ FAILED: Wrong message - '{e}'")
-            return False
+        assert "orizzontale" in error_msg.lower(), f"Wrong message - '{e}'"
+        print(f"✓ PASSED: Correct message - '{e}'")
 
     # Reset for vertical test
     game = QuoridorGame()
@@ -187,13 +170,8 @@ def test_error_messages():
         game.move_player((5, 5))
     except Exception as e:
         error_msg = str(e)
-        if "verticale" in error_msg.lower():
-            print(f"✓ PASSED: Correct message - '{e}'")
-        else:
-            print(f"❌ FAILED: Wrong message - '{e}'")
-            return False
-
-    return True
+        assert "verticale" in error_msg.lower(), f"Wrong message - '{e}'"
+        print(f"✓ PASSED: Correct message - '{e}'")
 
 
 if __name__ == "__main__":

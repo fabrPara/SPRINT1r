@@ -29,6 +29,24 @@ class DummyView:
         self.exited = True
         self.winner_id = winner_id
 
+    def show_exit_message(self) -> None:
+        pass
+
+    def show_player_resigned(self, player_id: int) -> None:
+        pass
+
+    def prompt_new_game(self) -> str:
+        return "n"
+
+    def prompt_game_settings(self) -> tuple[bool, float]:
+        return (False, 180.0)
+
+    def prompt_num_players(self) -> int:
+        return 2
+
+    def show_initial_message(self) -> None:
+        pass
+
     def get_input(self) -> str:
         return self.inputs.pop(0) if self.inputs else ""
 

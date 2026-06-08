@@ -40,7 +40,7 @@ def test_multiple_walls():
     print("✓ Piazzato muro H in (5, 4)")
 
     # Piazza muro V in e3
-    game._current_turn = 1
+    game._current_turn_index = 0
     game.place_wall((5, 3, "v"))
     print("✓ Piazzato muro V in (5, 3)")
 
@@ -67,7 +67,7 @@ def test_wall_overlap_detection():
     print("✓ Piazzato primo muro H in (5, 4)")
 
     # Tenta di piazzare muro sovrapposto
-    game._current_turn = 1
+    game._current_turn_index = 0
     try:
         game.place_wall((5, 4, "h"))
         print("❌ ERRORE: Ha permesso sovrapposizione!")
@@ -92,7 +92,7 @@ def test_wall_blocking_from_different_directions():
     # Test 1: Da basso verso alto
     print("\nTest 1: Movimento da (5, 5) a (5, 4)")
     game._players[0].set_position(Cell(5, 5))
-    game._current_turn = 1
+    game._current_turn_index = 0
     try:
         game.move_player((5, 4))
         print("❌ ERRORE: Ha saltato il muro!")
@@ -102,7 +102,7 @@ def test_wall_blocking_from_different_directions():
     # Test 2: Da alto verso basso
     print("\nTest 2: Movimento da (5, 3) a (5, 4)")
     game._players[0].set_position(Cell(5, 3))
-    game._current_turn = 1
+    game._current_turn_index = 0
     try:
         game.move_player((5, 4))
         print("❌ ERRORE: Ha saltato il muro!")
@@ -112,7 +112,7 @@ def test_wall_blocking_from_different_directions():
     # Test 3: Colonna adiacente (colonna 6)
     print("\nTest 3: Movimento da (6, 3) a (6, 4)")
     game._players[0].set_position(Cell(6, 3))
-    game._current_turn = 1
+    game._current_turn_index = 0
     try:
         game.move_player((6, 4))
         print("❌ ERRORE: Ha saltato il muro!")

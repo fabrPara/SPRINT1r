@@ -1,0 +1,1 @@
+"""package test per il TESTCONTROLLER del gioco Quoridor ."""

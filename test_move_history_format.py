@@ -64,9 +64,9 @@ game = QuoridorGame(num_players=4)
 game.move_player((1, 6))  # P1: a6
 game.move_player((9, 6))  # P2: i6
 game.move_player((5, 2))  # P3: e2
-game.move_player((5, 9))  # P4: e9
-game.move_player((2, 5))  # P1: b5
-game.move_player((8, 5))  # P2: h5
+game.move_player((5, 8))  # P4: e8
+game.move_player((2, 6))  # P1: b6
+game.move_player((8, 6))  # P2: h6
 game.move_player((5, 3))  # P3: e3
 game.place_wall((5, 3, 'h'))  # P4: e3h
 print(format_move_history(game.get_move_history(), 4))

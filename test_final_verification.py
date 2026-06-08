@@ -23,7 +23,7 @@ def verify_wall_blocking():
         game._players[0].set_position(Cell(5, 5))
         game._players[1].set_position(Cell(8, 9))
         game.place_wall((5, 4, "h"))
-        game._current_turn = 1
+        game._current_turn_index = 0
 
         try:
             game.move_player((5, 4))
@@ -45,7 +45,7 @@ def verify_wall_blocking():
         game._players[0].set_position(Cell(5, 3))
         game._players[1].set_position(Cell(8, 9))
         game.place_wall((5, 4, "h"))
-        game._current_turn = 1
+        game._current_turn_index = 0
 
         try:
             game.move_player((5, 4))
@@ -67,7 +67,7 @@ def verify_wall_blocking():
         game._players[0].set_position(Cell(4, 5))
         game._players[1].set_position(Cell(8, 9))
         game.place_wall((5, 4, "v"))
-        game._current_turn = 1
+        game._current_turn_index = 0
 
         try:
             game.move_player((5, 5))
@@ -89,7 +89,7 @@ def verify_wall_blocking():
         game._players[0].set_position(Cell(6, 5))
         game._players[1].set_position(Cell(8, 9))
         game.place_wall((5, 4, "v"))
-        game._current_turn = 1
+        game._current_turn_index = 0
 
         try:
             game.move_player((5, 5))
@@ -111,7 +111,7 @@ def verify_wall_blocking():
         game._players[0].set_position(Cell(5, 3))
         game._players[1].set_position(Cell(8, 9))
         game.place_wall((5, 4, "h"))
-        game._current_turn = 1
+        game._current_turn_index = 0
 
         # Move left should work
         try:
@@ -135,7 +135,7 @@ def verify_wall_blocking():
         game._players[0].set_position(Cell(5, 4))
         game._players[1].set_position(Cell(8, 9))
         game.place_wall((5, 5, "h"))  # Horizontal wall
-        game._current_turn = 1
+        game._current_turn_index = 0
 
         try:
             game.move_player((5, 5))

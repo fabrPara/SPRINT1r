@@ -19,7 +19,7 @@ def simulate_game():
     # P1 at e2, P2 at e8
     model._players[0].set_position(Cell(5, 2))
     model._players[1].set_position(Cell(5, 8))
-    model._current_turn = 1
+    model._current_turn_index = 0
 
     print("Initial Setup:")
     print("  P1 at e2 (5, 2)")
@@ -60,9 +60,9 @@ def simulate_game():
     view.render(model.get_game_state())
 
     # P2 dummy move
-    model._current_turn = 2
+    model._current_turn_index = 1
     model._players[1].set_position(Cell(6, 8))
-    model._current_turn = 1
+    model._current_turn_index = 0
 
     # P1 tries to move UP through wall (this should fail now!)
     print("\n--- P1's Action: Try to move up from e3 to e4 (BLOCKED BY WALL!) ---")
@@ -87,7 +87,7 @@ def test_wall_blocking_from_other_side():
     # Setup: P1 at e5, P2 at f9
     model._players[0].set_position(Cell(5, 5))
     model._players[1].set_position(Cell(6, 9))
-    model._current_turn = 1
+    model._current_turn_index = 0
 
     print("Initial Setup:")
     print("  P1 at e5 (5, 5)")
@@ -101,11 +101,11 @@ def test_wall_blocking_from_other_side():
     view.render(model.get_game_state())
 
     # P2 dummy move
-    model._current_turn = 2
+    model._current_turn_index = 1
 
     # P1 tries to move up through wall (from below)
     print("\n--- P1 at (5,5) tries to move UP through wall at e4 ---")
-    model._current_turn = 1
+    model._current_turn_index = 0
     try:
         model.move_player((5, 4))
         print("❌ ERROR: PLAYER JUMPED OVER THE WALL!")

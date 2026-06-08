@@ -50,7 +50,7 @@ def test_horizontal_wall():
     # P2 tries to move, P1 moves towards wall from below
     print("\nP2's turn (dummy move)...")
     game._players[1].set_position(Cell(5, 3))
-    game._current_turn = 1
+    game._current_turn_index = 0
 
     print("\n--- Test Case 1a: P1 at (5, 3) tries to move to (5, 4) ---")
     try:
@@ -62,7 +62,7 @@ def test_horizontal_wall():
 
     # Reset for next test
     game._players[0].set_position(Cell(5, 3))
-    game._current_turn = 1
+    game._current_turn_index = 0
 
     # Move to different position for next test
     game._players[0].set_position(Cell(5, 5))
@@ -96,11 +96,11 @@ def test_vertical_wall():
 
     # P2 skips, P1 tests movement
     print("\nP2's turn (dummy move)...")
-    game._current_turn = 2
+    game._current_turn_index = 1
 
     print("\n--- Test Case 2a: P1 at (4, 5) tries to move to (5, 5) ---")
     game._players[0].set_position(Cell(4, 5))
-    game._current_turn = 1
+    game._current_turn_index = 0
     try:
         game.move_player((5, 5))
         print("❌ FAILED: Player jumped over the wall!")
@@ -110,7 +110,7 @@ def test_vertical_wall():
 
     print("\n--- Test Case 2b: P1 at (6, 5) tries to move to (5, 5) ---")
     game._players[0].set_position(Cell(6, 5))
-    game._current_turn = 1
+    game._current_turn_index = 0
     try:
         game.move_player((5, 5))
         print("❌ FAILED: Player jumped over the wall!")
@@ -131,7 +131,7 @@ def test_valid_moves():
 
     # Place wall and switch back to P1
     game.place_wall((5, 4, "h"))
-    game._current_turn = 1  # Force turn back to P1
+    game._current_turn_index = 0  # Force turn back to P1
     print("Wall placed at (5, 4)")
 
     # Valid move to the side
@@ -162,7 +162,7 @@ def test_error_messages():
 
     # Horizontal wall
     game.place_wall((5, 4, "h"))
-    game._current_turn = 1
+    game._current_turn_index = 0
 
     print("--- Test Case 4a: Horizontal wall error message ---")
     try:
@@ -180,7 +180,7 @@ def test_error_messages():
     game._players[0].set_position(Cell(4, 5))
     game._players[1].set_position(Cell(8, 9))
     game.place_wall((5, 4, "v"))
-    game._current_turn = 1
+    game._current_turn_index = 0
 
     print("\n--- Test Case 4b: Vertical wall error message ---")
     try:

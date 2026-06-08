@@ -27,7 +27,7 @@ def test_horizontal_wall_block():
 
     try:
         game._players[0].set_position(Cell(5, 3))  # Reset
-        game._current_turn = 1
+        game._current_turn_index = 0
         game.move_player((5, 4))
         print("❌ ERRORE: P1 ha saltato il muro!")
     except MovementError as e:
@@ -56,7 +56,7 @@ def test_vertical_wall_block():
 
     try:
         game._players[0].set_position(Cell(4, 4))  # Reset
-        game._current_turn = 1
+        game._current_turn_index = 0
         game.move_player((5, 4))
         print("❌ ERRORE: P1 ha saltato il muro!")
     except MovementError as e:

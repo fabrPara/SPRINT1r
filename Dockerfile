@@ -25,4 +25,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Reset the entrypoint, don't invoke `uv`; run the application as a module instead
-ENTRYPOINT ["python", "-m", "src.main"]
+ENTRYPOINT ["uv", "run", "python", "-m", "src.main"]

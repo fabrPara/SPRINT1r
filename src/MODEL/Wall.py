@@ -21,19 +21,9 @@ class Wall:
         self._orientation = orientation
 
     def get_start_cell(self) -> Cell:
-        """Ritorna la cella di partenza del muro.
-
-        Returns:
-            Cell: La cella che indica la posizione iniziale.
-
-        """
+        """Restituisce la cella di partenza del muro."""
         return self._start_cell
 
     def get_orientation(self) -> str:
-        """Ritorna l'orientamento del muro.
-
-        Returns:
-            str: "H" se orizzontale, "V" se verticale.
-
-        """
+        """Restituisce l'orientamento del muro."""
         return self._orientation

@@ -8,7 +8,7 @@ from .Wall import Wall
 class QuoridorGame:
     """Classe principale per il gioco Quoridor.
 
-    Gestisce la logica del tabellone, i giocatori e il loro turno.
+    Gestisce la logica della scacchiera, i giocatori e il loro turno.
     Fornisce metodi per muovere i giocatori, posizionare muri, verificare il vincitore.
     """
 
@@ -19,6 +19,7 @@ class QuoridorGame:
         p1_start = Cell(5, 1)
         p2_start = Cell(5, 9)
 
+        # In BACKUP, il target_row è 9 per P1 e 1 per P2
         p1 = Player(player_id=1, start_pos=p1_start, target_row=9)
         p2 = Player(player_id=2, start_pos=p2_start, target_row=1)
 
@@ -62,32 +63,30 @@ class QuoridorGame:
                 "Movimento non valido: puoi muoverti solo di una cella."
             )
 
-        # --- CONTROLLO 3: Presenza di muri basato sul vostro sistema ---
+        # --- CONTROLLO 3: Presenza di muri ---
         for wall in self._board.get_walls():
             wx, wy = wall.get_start_cell().get_coords()
             w_orient = wall.get_orientation().lower()
 
             # Movimento Verticale (dy != 0)
-            # Un muro H in (wx, wy) blocca il passaggio tra y e y-1
-            # se la colonna è wx o wx+1.
+            # Un muro orizzontale blocca il movimento tra wy e wy+1
             if (
                 dy != 0
                 and w_orient == "h"
-                and wy == max(curr_y, target_y)
+                and ((dy > 0 and wy == curr_y) or (dy < 0 and wy == target_y))
                 and (wx == curr_x or wx == curr_x - 1)
             ):
-                raise MovementError("Un muro orizzontale blocca il passaggio.")
+                raise MovementError("Un muro orizzontale blocca la strada")
 
             # Movimento Orizzontale (dx != 0)
-            # Un muro V in (wx, wy) blocca il passaggio tra x e x-1
-            # se la riga è wy o wy-1.
+            # Un muro verticale a (wx, wy) blocca il movimento dal confine tra wx e wx+1
             if (
                 dx != 0
                 and w_orient == "v"
-                and wx == max(curr_x, target_x)
-                and (wy == curr_y or wy == curr_y + 1)
+                and ((dx > 0 and wx == curr_x) or (dx < 0 and wx == target_x))
+                and (wy == curr_y or wy == curr_y - 1)
             ):
-                raise MovementError("Un muro verticale blocca il passaggio.")
+                raise MovementError("Un muro verticale blocca la strada")
 
         current_player.set_position(Cell(target_x, target_y))
         self.switch_turn()
@@ -98,7 +97,7 @@ class QuoridorGame:
             "board": self._board,
             "players": self._players,
             "current_player_id": self._current_turn,
-            "winner": self._winner,
+            "winner": self._winner
         }
 
     def check_victory(self) -> bool:
@@ -112,11 +111,6 @@ class QuoridorGame:
                 return True
 
         return False
-
-    def resign_current_player(self) -> int:
-        """Riconosce la resa del giocatore di turno e restituisce il vincitore."""
-        if self._winner is not None:
-            return self._winner
 
         self._winner = 2 if self._current_turn == 1 else 1
         return self._winner
@@ -152,7 +146,30 @@ class QuoridorGame:
         try:
             self._board.add_wall(new_wall)
         except Exception as e:
+            # Se il piazzamento fallisce nella Board, restituiamo il muro al giocatore
             current_player._walls_count += 1
             raise e
 
         self.switch_turn()
+
+    def resign_current_player(self) -> int:
+        """Riconosce la resa del giocatore di turno e restituisce il vincitore."""
+        if self._winner is not None:
+            return self._winner
+
+        self._winner = 2 if self._current_turn == 1 else 1
+        return self._winner
+
+    def reset(self) -> None:
+        """Resetta il gioco per una nuova partita."""
+        self._board = Board()
+
+        p1_start = Cell(5, 1)
+        p2_start = Cell(5, 9)
+
+        p1 = Player(player_id=1, start_pos=p1_start, target_row=9)
+        p2 = Player(player_id=2, start_pos=p2_start, target_row=1)
+
+        self._players = [p1, p2]
+        self._current_turn = 1
+        self._winner = None

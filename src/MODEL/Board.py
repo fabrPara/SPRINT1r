@@ -82,13 +82,13 @@ class Board:
             wy = w.get_start_cell().y
             w_orientation = w.get_orientation().lower()
 
-            # Sovrapposizione esatta (stesse coordinate e stesso orientamento)
+            # Sovrapposizione esatta
             if nx == wx and ny == wy and orientation == w_orientation:
                 raise WallPlacementError(
                     "C'è già un muro esattamente in questa posizione."
                 )
 
-            # Sovrapposizione parziale con muro dello stesso orientamento
+            # Sovrapposizione parziale (stesso orientamento)
             if orientation == w_orientation:
                 if orientation == "h" and ny == wy and abs(nx - wx) == 1:
                     raise WallPlacementError(

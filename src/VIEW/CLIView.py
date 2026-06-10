@@ -113,8 +113,6 @@ class CLIView(BaseView):
                 el_riga.append(cella)
 
                 if col < 9:
-                    # Il muro verticale in col+1 attivato a riga o riga+1
-                    # sale e si estende sulla riga corrente
                     is_v = any(
                         o == "v" and c in [(col, riga), (col, riga - 1)]
                         for c, o in m_list
@@ -123,6 +121,7 @@ class CLIView(BaseView):
             table.add_row(*el_riga)
 
         self._console.print(table)
+
     def get_input(self) -> str:
         """Richiede un comando all'utente."""
         return self._console.input(

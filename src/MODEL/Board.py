@@ -111,21 +111,8 @@ class Board:
                     )
 
             # Intersezione a croce perfetta (condividono lo stesso centro)
-            if orientation != w_orientation:
-                if (
-                    orientation == "h"
-                    and w_orientation == "v"
-                    and nx + 1 == wx
-                    and ny == wy
-                ):
-                    raise WallPlacementError("I muri non possono incrociarsi a croce.")
-                if (
-                    orientation == "v"
-                    and w_orientation == "h"
-                    and nx == wx + 1
-                    and ny == wy
-                ):
-                    raise WallPlacementError("I muri non possono incrociarsi a croce.")
+            if orientation != w_orientation and nx == wx and ny == wy:
+                raise WallPlacementError("I muri non possono incrociarsi a croce.")
 
         simulated_walls = list(self._walls) + [new_wall]
 

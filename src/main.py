@@ -15,7 +15,7 @@ def main() -> None:
     model = QuoridorGame()
 
     # Controlliamo se l'utente ha passato l'argomento "gui" da terminale
-    if len(sys.argv) > 1 and sys.argv[1] == "gui":
+    if len(sys.argv) > 1 and sys.argv[1] == "--gui":
         view = AdvancedView()
         controller = GameController(model, view)
         
